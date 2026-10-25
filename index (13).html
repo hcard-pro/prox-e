@@ -488,6 +488,34 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand)}
 .a-card.nocover .a-cta{background:#fff;color:#1C1917}
 @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
 @media(prefers-reduced-motion:reduce){.a-cta{animation:none}}
+/* affiche « mise en avant » affichée après l'écran d'accueil */
+.poster{position:absolute;inset:0;background:#000;color:#fff;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);overflow:hidden}
+.poster.noimg{grid-template-columns:1fr}
+.p-media{position:relative;min-height:0;display:grid;place-items:center;padding:clamp(1rem,3vw,2.5rem);overflow:hidden}
+.p-media::after{content:"";position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 55%,color-mix(in srgb,var(--k-accent) 22%,transparent),transparent 70%);pointer-events:none}
+.p-media img{position:relative;z-index:1;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6));animation:pIn 1s cubic-bezier(.2,.7,.2,1) both,pFloat 6s ease-in-out 1s infinite}
+.p-txt{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:clamp(.8rem,2.2vh,1.4rem);padding:clamp(1.4rem,4vw,4rem) clamp(1.4rem,4vw,4rem) clamp(1.4rem,4vw,4rem) clamp(.5rem,2vw,1.5rem);min-width:0}
+.poster.noimg .p-txt{align-items:center;text-align:center;padding:clamp(1.4rem,5vw,5rem)}
+.p-badge{align-self:flex-start;display:inline-flex;align-items:center;gap:.5rem;background:var(--k-accent);color:var(--k-on-accent);border-radius:999px;padding:.45rem 1.1rem;font-weight:800;font-size:clamp(.9rem,1.6vw,1.15rem);letter-spacing:.06em;text-transform:uppercase;animation:pUp .7s .15s both}
+.poster.noimg .p-badge{align-self:center}
+.p-txt h1{color:#fff;font-size:clamp(2.4rem,6.4vw,5.4rem);font-weight:800;letter-spacing:-.04em;line-height:.98;margin:0;overflow-wrap:anywhere;animation:pUp .7s .25s both}
+.p-txt p{color:rgba(255,255,255,.82);font-size:clamp(1.05rem,2vw,1.45rem);font-weight:600;margin:0;max-width:34ch;animation:pUp .7s .35s both}
+.p-price{font-size:clamp(2.6rem,6vw,4.8rem);font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--k-accent);font-variant-numeric:tabular-nums;animation:pUp .7s .45s both}
+.p-price small{font-size:.38em;color:rgba(255,255,255,.7);font-weight:700;letter-spacing:0;margin-left:.3rem}
+.p-btns{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:clamp(.3rem,1.5vh,1rem);animation:pUp .7s .55s both}
+.poster.noimg .p-btns{justify-content:center}
+.p-btn{display:inline-flex;align-items:center;justify-content:center;gap:.7rem;min-height:clamp(60px,8vh,76px);padding:0 clamp(1.4rem,2.6vw,2.2rem);border-radius:999px;border:0;font-weight:800;font-size:clamp(1.05rem,2vw,1.35rem)}
+.p-btn .i{width:1.3em;height:1.3em}
+.p-btn.main{background:var(--k-brand);color:var(--k-on-brand);box-shadow:0 12px 30px -10px rgba(0,0,0,.7)}
+.p-btn.alt{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.p-skip{position:absolute;top:clamp(.8rem,2vw,1.4rem);right:clamp(.8rem,2vw,1.4rem);z-index:3;display:inline-flex;align-items:center;gap:.4rem;min-height:48px;padding:0 1.1rem;border-radius:999px;border:0;background:rgba(255,255,255,.12);color:#fff;font-weight:700;font-size:1rem}
+@keyframes pIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@keyframes pFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(max-aspect-ratio:1/1){.poster{grid-template-columns:1fr;grid-template-rows:minmax(0,1.1fr) auto}.p-txt{padding:0 clamp(1.4rem,5vw,3rem) clamp(1.6rem,5vh,3rem)}}
+@media(prefers-reduced-motion:reduce){.p-media img,.p-badge,.p-txt h1,.p-txt p,.p-price,.p-btns{animation:none}}
+.poster-prev{aspect-ratio:16/10;border-radius:12px;overflow:hidden;position:relative;margin-top:.4rem}
+.poster-prev .scaler{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;pointer-events:none}
 .seg{display:flex;gap:.3rem;padding:.35rem;background:color-mix(in srgb,var(--k-ink) 7%,transparent);border-radius:18px;flex:none}
 .seg button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.55rem;min-height:clamp(52px,6.5vh,62px);padding:0 1rem;border:0;border-radius:14px;background:transparent;color:var(--k-ink);font-weight:800;font-size:clamp(1rem,2.2vw,1.25rem);white-space:nowrap;line-height:1}
 .seg button.on{background:var(--k-brand);color:var(--k-on-brand);box-shadow:0 6px 14px -8px rgba(0,0,0,.45)}
@@ -1000,10 +1028,12 @@ async function reprocessProd(){
   }catch(e){toast('Le fond n’a pas pu être modifié sur cet appareil.');}
   finally{B.v360=null;render();}
 }
+const POSTER_SQL_MSG='Mise à jour de la base nécessaire : exécutez une fois dans Supabase (SQL Editor) : alter table tenant_branding add column if not exists poster jsonb; puis réessayez.';
 const V2_SQL_MSG='Mise à jour de la base nécessaire : exécutez une fois le script « sur-mesure v2 » dans Supabase (SQL Editor), puis réessayez.';
 function errMsg(e){
   const m=(e&&(e.message||e.error_description))||String(e||'');
   if(/(group_name|tier_max|ask_number)|image_url.{0,40}cake_families/i.test(m))return V2_SQL_MSG;
+  if(/poster/i.test(m))return POSTER_SQL_MSG;
   const map=[[/Invalid login credentials/i,'E-mail ou mot de passe incorrect.'],[/Email not confirmed/i,'Adresse e-mail pas encore confirmée : cliquez sur le lien reçu par e-mail, puis réessayez.'],[/Password should be at least|weak password/i,'Mot de passe trop faible : 8 caractères minimum, avec lettres et chiffres.'],[/Failed to fetch|NetworkError|Load failed|network/i,'Connexion impossible : vérifiez la connexion internet.'],[/rate limit|too many/i,'Trop de tentatives : patientez une minute.'],[/duplicate key/i,'Cet élément existe déjà.'],[/violates check constraint/i,'Une valeur saisie n’est pas valide.'],[/permission denied|row-level security|JWT/i,'Action non autorisée pour ce compte.'],[/signups not allowed|Signups not allowed/i,'Les inscriptions sont désactivées dans Supabase.']];
   for(const [r,t] of map)if(r.test(m))return t;
   return m||'Une erreur est survenue.';
@@ -1025,7 +1055,8 @@ const isOwner=t=>!!(t&&AUTH.profile&&AUTH.profile.role==='shop'&&AUTH.profile.te
 
 /* ---------- données ---------- */
 let D=null,ADM=null,LOAD={};
-const mapBranding=b=>({cover:b&&b.cover_url||null,primary:b&&b.color_primary||DEF.primary,bg:b&&b.color_bg||DEF.bg,accent:b&&b.color_accent||DEF.accent,tagline:b&&b.tagline||'',cakeHero:b&&b.cake_hero_url||null,legalName:b&&b.legal_name||'',legalAddress:b&&b.legal_address||'',legalEmail:b&&b.legal_email||'',retention:b&&b.retention_months||3});
+const mapPoster=x=>{x=x&&typeof x==='object'?x:{};return{on:!!x.on,productId:x.productId||null,image:x.image||null,title:String(x.title||''),text:String(x.text||''),price:Number.isFinite(x.price)?x.price:null,badge:String(x.badge==null?'Nouveauté':x.badge)};};
+const mapBranding=b=>({cover:b&&b.cover_url||null,primary:b&&b.color_primary||DEF.primary,bg:b&&b.color_bg||DEF.bg,accent:b&&b.color_accent||DEF.accent,tagline:b&&b.tagline||'',cakeHero:b&&b.cake_hero_url||null,legalName:b&&b.legal_name||'',legalAddress:b&&b.legal_address||'',legalEmail:b&&b.legal_email||'',retention:b&&b.retention_months||3,poster:mapPoster(b&&b.poster)});
 const mapProduct=r=>({id:r.id,name:r.name,desc:r.description||'',price:r.price_cents,cat:r.category_id,emoji:r.emoji||'🧁',allergens:r.allergens||[],image:r.image_url||null,frames:r.spin_frames||[],active:r.active,position:r.position,bundleQty:r.bundle_qty||null,bundlePrice:r.bundle_price_cents||null,cakeOn:!!r.cake_on,cakeFam:r.cake_family_id||null,cakeVar:r.cake_variety_id||null,cakePrice:r.cake_price_cents||0,cakeMin:r.cake_min||6,cakeMax:r.cake_max||12});
 const mapOpt=r=>({id:r.id,label:r.label,servings:r.servings,price:r.price_cents,position:r.position});
 const mapOrder0=r=>({id:r.id,num:r.number,status:r.status,customer:r.customer_name,phone:r.customer_phone||'',pickupAt:r.pickup_at,total:r.total_cents,note:r.note||'',createdAt:r.created_at,
@@ -1745,6 +1776,28 @@ function kioskMenu(t,st,preview,id){
   ${count&&!preview?`<button class="k-cartbar" data-act="openCart"><span>${ic('cart')}Voir ma commande <span class="cnt">${count}</span></span><span class="num">${eur(total)}</span></button>`:''}
   ${preview?'':kOverlay(t)}</div>`;
 }
+/* ---------- affiche « mise en avant » ---------- */
+const POSTER_BADGES=['Nouveauté','Produit du moment','Offre spéciale','Édition limitée','De saison',''];
+function posterOf(t){
+  const x=t&&t.branding&&t.branding.poster;if(!x||!x.on)return null;
+  const p=x.productId&&t.products.find(z=>z.id===x.productId&&z.active);
+  if(x.productId&&!p&&!x.image)return null;
+  const image=x.image||(p?(p.image||(p.frames&&p.frames[0])||null):null);
+  const title=x.title.trim()||(p?p.name:'');
+  if(!title&&!image)return null;
+  return{p:p||null,image,title,text:x.text.trim()||(p?p.desc:''),price:p?p.price:x.price,badge:x.badge,bundle:p?bundleTxt(p):''};
+}
+function posterHTML(t,preview){
+  const P=posterOf(t);if(!P)return '';
+  const A=attrs=>preview?'tabindex="-1"':attrs;
+  return `<div class="poster ${P.image?'':'noimg'}" role="region" aria-label="À la une : ${esc(P.title)}">
+    ${preview?'':`<button class="p-skip" data-act="posterGo">Passer${ic('x')}</button>`}
+    ${P.image?`<div class="p-media"><img src="${esc(P.image)}" alt="${esc(P.title)}"></div>`:''}
+    <div class="p-txt">${P.badge?`<span class="p-badge">${esc(P.badge)}</span>`:''}<h1>${esc(P.title)}</h1>${P.text?`<p>${esc(P.text)}</p>`:''}
+      ${P.price!=null?`<div class="p-price">${eur(P.price)}${P.p?'<small>l’unité</small>':''}</div>`:''}${P.bundle?`<p>Offre lot : ${esc(P.bundle)}</p>`:''}
+      <div class="p-btns">${P.p?`<button class="p-btn main" ${A('data-act="posterAdd"')}>${ic('plus')}Je le veux</button><button class="p-btn alt" ${A('data-act="posterGo"')}>Voir tout le catalogue</button>`:`<button class="p-btn main" ${A('data-act="posterGo"')}>${ic('book')}Découvrir le catalogue</button>`}</div>
+    </div></div>`;
+}
 function viewKiosk(t){
   if(K.tid!==t.id){K=freshK();K.tid=t.id;}
   try{localStorage.setItem('prox_last_shop',t.slug);}catch(e){}
@@ -1755,6 +1808,7 @@ function viewKiosk(t){
     ${segHTML(false,false)}
     <div class="a-card ${b.cover?'':'nocover'}" ${b.cover?`style="background-image:url('${esc(b.cover)}')"`:''}><div class="a-in"><h1>${esc(t.name)}</h1>${b.tagline?`<p>${esc(b.tagline)}</p>`:''}<span class="a-cta">${ic('book')}Touchez l’écran pour commander</span></div></div>
   </div>${kOverlay(t)}</div>`;
+  if(K.screen==='poster'){const h=posterHTML(t,false);if(h)return `<div class="kiosk" style="${kVars(b)}">${h}${kOverlay(t)}</div>`;K.screen='menu';}
   return kioskMenu(t,K,false);
 }
 function kOverlay(t){
@@ -2164,6 +2218,19 @@ function rgpdCard(t){const b=t.branding;const miss=!b.legalName||!b.legalAddress
   <label class="field">Durée de conservation des commandes<select data-change="brandLegal" data-k="retention_months">${[1,3,6,12].map(n=>`<option value="${n}" ${b.retention===n?'selected':''}>${n} mois</option>`).join('')}</select><span class="hint">Les commandes plus anciennes sont supprimées automatiquement chaque nuit.</span></label>
   <button class="btn-link" style="justify-self:start" data-act="previewPrivacy">${ic('eye')} Voir la politique de confidentialité</button>
   </div></div>`;}
+function posterCard(t){const x=t.branding.poster||mapPoster(null),P=posterOf(t);
+  const prods=t.products.filter(p=>p.active);
+  const opts=`<option value="">Aucun (affiche libre)</option>`+prods.map(p=>`<option value="${p.id}" ${p.id===x.productId?'selected':''}>${esc(p.name)} · ${eur(p.price)}</option>`).join('');
+  const lp=x.productId&&t.products.find(z=>z.id===x.productId);
+  return `<div class="card"><div class="card-h"><div><h2>Affiche « À la une »</h2><p class="muted small">Quand un client touche l’écran d’accueil, cette affiche s’affiche en plein écran avant le catalogue : idéal pour une nouveauté ou un produit à pousser.</p></div><label class="tog" title="Afficher sur la borne"><input type="checkbox" data-change="poster" data-k="on" ${x.on?'checked':''} aria-label="Afficher l’affiche sur la borne"><span></span></label></div><div class="card-b stack">
+  <label class="field">Produit mis en avant<select data-change="poster" data-k="productId">${opts}</select><span class="hint">${lp?'Le prix et l’ajout au panier suivent ce produit du catalogue.':'Sans produit, l’affiche renvoie simplement vers le catalogue.'}</span></label>
+  <div class="grid2"><label class="field">Bandeau<select data-change="poster" data-k="badge">${POSTER_BADGES.map(v=>`<option value="${esc(v)}" ${v===x.badge?'selected':''}>${v?esc(v):'Aucun bandeau'}</option>`).join('')}</select></label>
+  ${lp?'':`<label class="field">Prix affiché (facultatif)<input value="${x.price!=null?(x.price/100).toFixed(2).replace('.',','):''}" data-change="poster" data-k="price" inputmode="decimal" placeholder="4,50"></label>`}</div>
+  <label class="field">Titre${lp?' (facultatif)':''}<input value="${esc(x.title)}" data-change="poster" data-k="title" maxlength="60" placeholder="${lp?esc(lp.name):'La bûche de Noël est arrivée'}"></label>
+  <label class="field">Texte (facultatif)<input value="${esc(x.text)}" data-change="poster" data-k="text" maxlength="140" placeholder="${lp&&lp.desc?esc(lp.desc):'Disponible tout le mois de décembre'}"></label>
+  <div class="sect"><h3>Photo de l’affiche</h3><p class="muted small">${lp?'Par défaut, la photo du produit est utilisée. Importez-en une autre pour une mise en scène plus travaillée.':'Une belle photo du produit, format carré ou paysage.'}</p>${x.image?`<img class="cover-prev" src="${esc(x.image)}" alt="Photo actuelle de l’affiche">`:''}<div class="row"><label class="upload">${ic('upload')}${x.image?'Changer la photo':'Importer une photo'}<input type="file" accept="image/*" data-file="posterImage"></label>${x.image?'<button class="btn-link" data-act="posterImgClear">Retirer</button>':''}</div></div>
+  ${P?`<div class="sect"><h3>Aperçu</h3><div class="poster-prev device" style="padding:0;background:#000"><div class="screen" style="border-radius:12px"><div class="scaler"><div class="kiosk" style="${kVars(t.branding)}">${posterHTML(t,true)}</div></div></div></div><div class="row" style="margin-top:.8rem"><button class="btn btn-sec" data-act="posterPreview">${ic('eye')}Tester sur la borne</button>${x.on?'':'<span class="muted small">Activez l’interrupteur pour l’afficher aux clients.</span>'}</div></div>`:''}
+  </div></div>`;}
 function tabBrand(t){const b=t.branding;
   return `<div class="brand-grid"><div class="card"><div class="card-h"><h2>Identité</h2></div><div class="card-b stack">
   <label class="field">Nom de la boutique<input value="${esc(t.name)}" data-change="shopName" maxlength="50"></label>
@@ -2172,6 +2239,7 @@ function tabBrand(t){const b=t.branding;
   <div class="sect"><h3>Couleurs</h3><div class="swatches">${[['primary','Principale'],['bg','Fond'],['accent','Accent']].map(([k,l])=>`<label class="swatch"><input type="color" value="${b[k]}" data-live="${k}" data-change="brandColor" data-k="${k}"><span>${l}<span class="hex">${b[k]}</span></span></label>`).join('')}</div>
   <p class="muted small" id="contrastHint" style="margin-top:.7rem">${contrastHint(b)}</p><button class="btn-link" data-act="brandReset">Revenir aux couleurs Prox-e</button></div>
   </div></div>
+  ${posterCard(t)}
   ${rgpdCard(t)}
   <div class="card"><div class="card-h"><div><h2>Installer Prox-e sur la tablette</h2><p class="muted small">Ouvrez la borne sur la tablette, puis installez l’application : elle s’ouvrira directement sur la borne de ${esc(t.name)}, en plein écran et sans mise en veille.</p></div>${installBtn('btn')}</div></div>
   <div class="card"><div class="card-h"><h2>Aperçu en direct</h2></div><div class="card-b"><div class="device"><div class="screen"><div class="scaler">${kioskMenu(t,{cat:'all',ex:[],cart:[]},true,'brandPrev')}</div></div></div></div></div></div>`;}
@@ -2450,7 +2518,9 @@ const ACT={
   copy(el){copyText(el.dataset.text);},
   delCode(el){safe(async()=>{await q(sb.from('activation_codes').delete().eq('code',el.dataset.code));if(A.last===el.dataset.code)A.last=null;await loadAdmin();},'Code révoqué.');},
   /* borne */
-  start(){K.screen='menu';if(K.ov==='pin'||K.ov==='shoplogin')K.ov=null;render();},
+  start(){K.screen=(K.screen==='attract'&&posterOf(curT()))?'poster':'menu';if(K.ov==='pin'||K.ov==='shoplogin')K.ov=null;render();},
+  posterGo(){K.screen='menu';render();},
+  posterAdd(){const t=curT(),P=posterOf(t);K.screen='menu';if(P&&P.p){const p=P.p,ex=K.cart.find(i=>i.productId===p.id&&!i.cake);if(ex)ex.qty++;else K.cart.push({key:uid(),productId:p.id,name:p.name,price:p.price,qty:1});toast(`${p.name} ajouté à la commande.`);}render();},
   restart(){const tid=K.tid;K=freshK();K.tid=tid;render();},
   cat(el){K.cat=el.dataset.c;render();const m=document.querySelector('.k-main');if(m)m.scrollTop=0;},
   openAlg(){K.ov='alg';render();},
@@ -2577,12 +2647,15 @@ const ACT={
   delVar(el){safe(async()=>{await q(sb.from('cake_varieties').delete().eq('id',el.dataset.id));await reloadCake();});},
   cakeHeroClear(){safe(async()=>{await patchBranding({cake_hero_url:null});});},
   coverClear(){safe(async()=>{await patchBranding({cover_url:null});});},
+  posterImgClear(){safe(async()=>{await savePoster({image:null});},'Photo retirée.');},
+  posterPreview(){const t=curT();if(!posterOf(t))return toast('Activez l’affiche et choisissez un produit ou une photo.');go('#/b/'+t.slug);setTimeout(()=>{K.screen='poster';render();},50);},
   brandReset(){safe(async()=>{await patchBranding({color_primary:DEF.primary,color_bg:DEF.bg,color_accent:DEF.accent});});},
   delStaff(el){safe(async()=>{await q(sb.rpc('remove_staff',{p_id:el.dataset.id}));await reloadStaff();},'Accès retiré.');},
   playVideo(el){if(B.vexp&&B.vexp.id!==el.dataset.id&&!B.vexp.busy){try{URL.revokeObjectURL(B.vexp.url);}catch(e){}B.vexp=null;}B.ov='video';B.ovData=el.dataset.id;render();},
   copyScript(el){const v=curT().videos.find(z=>z.id===el.dataset.id);if(v)copyText(scriptText(v));},
   delVideo(el){safe(async()=>{await q(sb.from('videos').delete().eq('id',el.dataset.id));await reloadVideos();});}
 };
+async function savePoster(obj){const cur=D.t.branding.poster||mapPoster(null);await patchBranding({poster:Object.assign({},cur,obj)});}
 async function patchBranding(obj){await q(sb.from('tenant_branding').update(Object.assign({},obj,{updated_at:new Date().toISOString()})).eq('tenant_id',D.t.id));await reloadBranding();}
 
 const FORMS={
@@ -2745,6 +2818,7 @@ async function handleFile(el){
     else if(kind==='varImage'){toast('Envoi de la photo…');const blob=await resizeToBlob(files[0],1200,0.82);const url=await uploadMedia(blob,'varieties');await q(sb.from('cake_varieties').update({image_url:url}).eq('id',el.dataset.id));await reloadCake();toast('Photo enregistrée.');render();}
     else if(kind==='modelImage'){const d=B.editModel;toast('Préparation de la photo…');const raw=await resizeToBlob(files[0],2000,0.92);const m=await finishMedia(raw,getBgMode(),0.9);if(B.editModel!==d)return;d.image=m;toast(m.skip&&!m.ok?BG_WARN:'Photo prête : vérifiez l’aperçu, puis enregistrez.');render();}
     else if(kind==='famImage'){toast('Envoi de la photo…');const raw=await resizeToBlob(files[0],2000,0.92);const m=await finishMedia(raw,getBgMode(),0.9);const url=await uploadMedia(m.blob,'families');await q(sb.from('cake_families').update({image_url:url}).eq('id',el.dataset.id));await reloadCake();toast('Photo enregistrée.');render();}
+    else if(kind==='posterImage'){toast('Envoi de la photo…');const blob=await resizeToBlob(files[0],1800,0.85);const url=await uploadMedia(blob,'poster');await savePoster({image:url});toast('Photo de l’affiche enregistrée.');render();}
     else if(kind==='cakeHero'){toast('Envoi de la photo…');const blob=await resizeToBlob(files[0],1600,0.82);const url=await uploadMedia(blob,'cake');await patchBranding({cake_hero_url:url});toast('Photo du bandeau enregistrée.');render();}
     else if(kind==='cakePhotos'){const room=3-K.cake.photos.length;for(const f of files.slice(0,room)){const blob=await resizeToBlob(f,1200,0.8);K.cake.photos.push({blob,url:URL.createObjectURL(blob)});}K.keepScroll=true;render();}
   }catch(err){toast(err&&err.message&&(errMsg(err)===V2_SQL_MSG||!/lecture|image|conversion/.test(err.message))?errMsg(err):'Cette image n’a pas pu être lue. Essayez une photo JPEG ou PNG.');}
@@ -2822,6 +2896,13 @@ document.addEventListener('change',e=>{
   else if(kind==='brandLegal'){const k=el.dataset.k;const v=k==='retention_months'?parseInt(el.value,10):(el.value.trim()||null);
     if(k==='legal_email'&&v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){toast('Adresse e-mail invalide.');return;}
     safe(async()=>{await patchBranding({[k]:v});},'Enregistré.');}
+  else if(kind==='poster'){const k=el.dataset.k;let v;
+    if(k==='on')v=el.checked;
+    else if(k==='price'){const sv=el.value.trim();if(!sv)v=null;else{v=Math.round(parseFloat(sv.replace(',','.'))*100);if(!(v>=0)){toast('Prix invalide : utilisez un nombre, par exemple 3,50.');render();return;}}}
+    else if(k==='productId')v=el.value||null;
+    else v=el.value.trim();
+    if(k==='on'&&v&&!posterOf({products:t.products,branding:{poster:Object.assign({},t.branding.poster,{on:true})}})){toast('Choisissez d’abord un produit ou importez une photo avec un titre.');el.checked=false;return;}
+    safe(async()=>{await savePoster({[k]:v});},k==='on'?(v?'Affiche activée sur la borne.':'Affiche désactivée.'):'Enregistré.');}
   else if(kind==='brandText'){safe(async()=>{await patchBranding({tagline:el.value.trim()||null});},'Enregistré.');}
   else if(kind==='brandColor'){safe(async()=>{await patchBranding({[COLMAP[el.dataset.k]]:el.value});});}
 });
@@ -2836,6 +2917,7 @@ setInterval(()=>{
     if(K.ov==='idle'){const left=Math.max(0,15-Math.floor((Date.now()-K.idleAt)/1000));const el=document.getElementById('idleCount');if(el)el.textContent=left;if(left<=0)reset();}
     else if(K.ov==='done'){if(idle>=15)reset();}
     else if(K.sending){}
+    else if(K.screen==='poster'&&!K.ov&&idle>=30)reset();
     else if(K.screen==='menu'&&(K.cart.length||(K.ov&&K.ov!=='pin'&&K.ov!=='shoplogin'))&&idle>=75){closeZoom();K.prevOv=K.ov;K.ov='idle';K.idleAt=Date.now();render();}
     else if(K.screen==='menu'&&!K.cart.length&&!K.ov&&idle>=60)reset();
     else if((K.ov==='pin'||K.ov==='shoplogin')&&idle>=60){K.ov=null;render();}
