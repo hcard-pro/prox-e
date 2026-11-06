@@ -1073,6 +1073,7 @@ const ICONS={
   left:'<path d="M15 18l-6-6 6-6"/>', right:'<path d="M9 18l6-6-6-6"/>',
   rotate:'<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/>',
   restart:'<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/>',
+printer:'<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/>',
   image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>',
   grid:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
   spark:'<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
@@ -2516,6 +2517,52 @@ function bOverlay(t){
   return inner?`<div class="ov" data-act="closeB">${inner}</div>`:'';
 }
 function orderSummary(o){const parts=o.items.map(i=>i.qty+' '+i.name.toLowerCase()).concat(o.cakes.map(c=>'gâteau '+c.sizeLabel));const s=parts.join(', ');return s.length>64?s.slice(0,62)+'…':s;}
+/* Fiche de production imprimable (A4) pour un jour donné */
+function printDayHTML(t,dk){
+  const dos=t.orders.filter(o=>o.status!=='canceled'&&dayKey(o.pickupAt)===dk).sort((a,b)=>a.pickupAt.localeCompare(b.pickupAt));
+  const day=cap(new Date(dk+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+  const agg={},com={};
+  dos.forEach(o=>o.items.forEach(i=>{const p=i.productId&&t.products.find(z=>z.id===i.productId);const c=p&&t.categories.find(z=>z.id===p.cat);const g=c?c.name:'Autres produits';(agg[g]=agg[g]||{})[i.name]=(agg[g][i.name]||0)+i.qty;if(i.comment)(com[i.name]=com[i.name]||[]).push(`n° ${o.num} (${o.customer}) : ${i.comment}`);}));
+  const groups=t.categories.map(c=>c.name).concat('Autres produits').filter(g=>agg[g]);
+  const cakes=[];dos.forEach(o=>o.cakes.forEach(c=>cakes.push({c,o})));
+  const nbPieces=Object.values(agg).reduce((s,g)=>s+Object.values(g).reduce((a,b)=>a+b,0),0);
+  const box='<span class="cb"></span>';
+  const prod=groups.map(g=>`<h3>${esc(g)}</h3><table><thead><tr><th class="w">Fait</th><th>Produit</th><th class="q">Qté</th></tr></thead><tbody>${Object.entries(agg[g]).sort((a,b)=>b[1]-a[1]).map(([n,q])=>`<tr><td class="w">${box}</td><td>${esc(n)}${(com[n]||[]).map(c=>`<div class="com">↳ ${esc(c)}</div>`).join('')}</td><td class="q">${q}</td></tr>`).join('')}</tbody></table>`).join('');
+  const ck=cakes.map(({c,o})=>`<div class="cake"><div class="ch">${box}<b>${fmtT(o.pickupAt)} · n° ${esc(o.num)} · ${esc(o.customer)}</b>${o.phone?`<span>${esc(fmtPhone(o.phone))}</span>`:''}</div>
+    <p><b>${esc(c.category?catLabel(c.category)+' sur-mesure':'Gâteau sur-mesure')}</b> — ${esc(c.sizeLabel)}</p>
+    ${c.modelTitle?`<p>Modèle : ${esc(c.modelTitle)}</p>`:''}${c.flavor?`<p>Parfum / variété : ${esc(c.flavor)}</p>`:''}${c.parfum?`<p>Parfum : ${esc(c.parfum)}</p>`:''}${c.chars?`<p>Chiffres : « ${esc(c.chars)} »</p>`:''}
+    <p>Décoration : ${c.decos&&c.decos.length?esc(c.decos.join(', ')):'aucune'}</p>${c.inscription?`<p class="insc">Inscription : « ${esc(c.inscription)} »</p>`:''}${c.note?`<p>Remarque : ${esc(c.note)}</p>`:''}${c.photos&&c.photos.length?`<p class="muted">${c.photos.length} photo(s) d’inspiration : voir la commande dans l’appli</p>`:''}</div>`).join('');
+  const ord=dos.map(o=>{const due=o.total-(o.amountPaid||0);const pay=o.paid?'Payée':o.amountPaid>0?'Reste '+eur(due):'À payer '+eur(o.total);
+    const lines=o.items.map(i=>`${i.qty} × ${esc(i.name)}${i.comment?` <i>(${esc(i.comment)})</i>`:''}`).concat(o.cakes.map(c=>'Gâteau : '+esc(cakeSummary(c))));
+    return `<tr><td class="w">${box}</td><td class="h">${fmtT(o.pickupAt)}</td><td><b>n° ${esc(o.num)} · ${esc(o.customer)}</b>${o.phone?`<br><span class="muted">${esc(fmtPhone(o.phone))}</span>`:''}${o.mode==='delivery'?`<br><b>Livraison</b> : ${esc((o.address&&(o.address.label||[o.address.line1,o.address.postcode,o.address.city].filter(Boolean).join(' ')))||'')}`:''}</td><td>${lines.join('<br>')}${o.note?`<div class="com">Remarque : ${esc(o.note)}</div>`:''}</td><td class="p ${o.paid?'':'due'}">${pay}</td></tr>`;}).join('');
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Production ${esc(dk)} - ${esc(t.name)}</title><style>
+@page{size:A4;margin:12mm}*{box-sizing:border-box}body{font:11pt/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#111;margin:0;padding:12px}
+header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px}
+h1{font-size:18pt;margin:0}h2{font-size:13pt;margin:16px 0 6px;padding:3px 8px;background:#eee;border-left:4px solid #111}h3{font-size:11pt;margin:10px 0 4px}
+.sum{font-size:10pt;text-align:right}table{width:100%;border-collapse:collapse;margin-bottom:6px}th,td{border:1px solid #bbb;padding:4px 6px;vertical-align:top;text-align:left}th{background:#f4f4f4;font-size:9pt}
+.q{width:52px;text-align:center;font-weight:700;font-size:13pt}.w{width:34px;text-align:center}.h{width:50px;font-weight:700}.p{width:95px;font-size:9.5pt}.p.due{font-weight:700}
+.cb{display:inline-block;width:13px;height:13px;border:1.5px solid #111;border-radius:2px;vertical-align:middle;margin-right:6px}
+.com{font-size:9pt;color:#444;margin-top:2px}.muted{color:#666;font-size:9pt}tr,.cake{break-inside:avoid}
+.cake{border:1.5px solid #111;border-radius:6px;padding:6px 10px;margin-bottom:8px}.cake p{margin:2px 0}.ch{display:flex;gap:12px;align-items:center;margin-bottom:4px}.insc{font-weight:700}
+.tools{margin-bottom:10px}.tools button{font:inherit;padding:8px 16px;border-radius:8px;border:1px solid #111;background:#111;color:#fff;cursor:pointer;margin-right:6px}.tools button.s{background:#fff;color:#111}
+@media print{.tools{display:none}body{padding:0}}
+</style></head><body>
+<div class="tools"><button onclick="window.print()">Imprimer</button><button class="s" onclick="window.close()">Fermer</button></div>
+<header><div><h1>Production du ${esc(day)}</h1><div class="muted">${esc(t.name)}</div></div><div class="sum"><b>${dos.length}</b> commande${dos.length>1?'s':''} · <b>${nbPieces}</b> pièce${nbPieces>1?'s':''} · <b>${cakes.length}</b> sur-mesure<br><span class="muted">Imprimé le ${esc(new Date().toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</span></div></header>
+${dos.length?`<h2>1. À produire — total par produit</h2>${prod||'<p class="muted">Aucun produit du catalogue.</p>'}
+${cakes.length?`<h2>2. Gâteaux sur-mesure (${cakes.length})</h2>${ck}`:''}
+<h2>${cakes.length?3:2}. Commandes par heure de retrait</h2><table><thead><tr><th class="w">Prête</th><th class="h">Heure</th><th>Client</th><th>Contenu</th><th class="p">Paiement</th></tr></thead><tbody>${ord}</tbody></table>`:'<p>Aucune commande ce jour-là.</p>'}
+</body></html>`;
+}
+function printProductionDay(t,dk){
+  const html=printDayHTML(t,dk);
+  const w=window.open('','_blank');
+  if(w){w.document.open();w.document.write(html);w.document.close();w.focus();setTimeout(()=>{try{w.print();}catch(e){}},400);return;}
+  /* fenêtre bloquée : impression via un cadre caché */
+  const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(f);
+  f.contentDocument.open();f.contentDocument.write(html);f.contentDocument.close();
+  setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print();}catch(e){toast('Impression impossible sur cet appareil.');}setTimeout(()=>f.remove(),2000);},400);
+}
 function tabOrders(t){
   const now=new Date(),tk=dayKey(now);
   const live=t.orders.filter(o=>o.status!=='canceled');
@@ -2533,7 +2580,7 @@ function tabOrders(t){
   const selD=new Date(B.day+'T12:00');
   return `<div class="stats">${stats.map(([i,l,v])=>`<div class="card stat"><div class="lbl">${ic(i)}${l}</div><div class="val">${v}</div></div>`).join('')}</div>
   <div class="card"><div class="card-h"><h2>Semaine du ${fm(days[0])} au ${fm(days[6])}</h2><div class="weeknav"><button class="icon-btn" data-act="weekNav" data-d="-1" aria-label="Semaine précédente">${ic('left')}</button><button class="btn btn-sec" data-act="weekToday">Aujourd’hui</button><button class="icon-btn" data-act="weekNav" data-d="1" aria-label="Semaine suivante">${ic('right')}</button></div></div><div class="calwrap"><div class="cal">${cols}</div></div></div>
-  <div class="card"><div class="card-h"><div><h2>Production du ${selD.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h2><p class="muted small">Sélectionnez un jour dans le calendrier pour changer de date.</p></div></div><div class="card-b">
+  <div class="card"><div class="card-h"><div><h2>Production du ${selD.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h2><p class="muted small">Sélectionnez un jour dans le calendrier pour changer de date.</p></div><button class="btn btn-sec" data-act="printDay" ${dos.length?'':'disabled'}>${ic('printer')}Imprimer la journée</button></div><div class="card-b">
   ${dos.length?`<div class="prep"><div><h3>Produits du catalogue</h3>${gOrder.length?gOrder.map(g=>`<div class="prep-g"><h4>${esc(g)} <span class="muted small">${Object.values(agg[g]).reduce((a,b)=>a+b,0)} pièce${Object.values(agg[g]).reduce((a,b)=>a+b,0)>1?'s':''}</span></h4><ul class="qlist">${Object.entries(agg[g]).sort((a,b)=>b[1]-a[1]).map(([n,q2])=>`<li><span>${esc(n)}${(com[n]||[]).map(c=>`<span class="pcom">n° ${c.num}, ${esc(c.who)} : ${esc(c.txt)}</span>`).join('')}</span><b>${q2}</b></li>`).join('')}</ul></div>`).join(''):'<p class="muted">Aucun.</p>'}</div>
   <div><h3>Gâteaux sur-mesure</h3>${cakes.length?cakes.map(({c,o})=>`<div class="note"><b>${fmtT(o.pickupAt)}, ${esc(o.customer)}</b><p>${esc(cakeSummary(c))}</p>${c.note?`<p class="muted">Remarque : ${esc(c.note)}</p>`:''}</div>`).join(''):'<p class="muted">Aucun.</p>'}</div></div>`:'<div class="empty">Aucune commande à retirer ce jour-là.</div>'}</div></div>`;
 }
@@ -3297,6 +3344,7 @@ const ACT={
   weekNav(el){B.week=addDays(new Date(B.week),7*Number(el.dataset.d)).toISOString();render();},
   weekToday(){B.week=startOfWeek(new Date()).toISOString();B.day=dayKey(new Date());render();},
   pickDay(el){B.day=el.dataset.day;render();},
+  printDay(){const t=curT();if(t)printProductionDay(t,B.day);},
   async openOrder(el){B.ov='order';B.ovData=el.dataset.id;render();
     const o=curT().orders.find(z=>z.id===el.dataset.id);const paths=[];o&&o.cakes.forEach(c=>c.photos.forEach(p=>{if(!B.photoUrls[p])paths.push(p);}));
     if(paths.length){try{const {data}=await sb.storage.from('inspirations').createSignedUrls(paths,3600);(data||[]).forEach(r=>{if(r.signedUrl)B.photoUrls[r.path]=r.signedUrl;});}catch(e){}if(B.ov==='order')render();}},
