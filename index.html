@@ -781,6 +781,143 @@ h3.lbl{font-size:.8rem;font-weight:800;color:var(--muted);margin:0 0 .5rem}
   .lp-show .tilt,.lp-show .tilt[data-reveal].in{transform:none}
 }
 @media(prefers-reduced-motion:reduce){.h3{height:auto}.h3-sticky{position:relative}.h3-hint{display:none}[data-reveal]{opacity:1;transform:none;transition:none}.lp-show .tilt[data-reveal]{transform:none}}
+/* ============ accueil : vitrine à onglets sur la tablette ============ */
+.lp3 .sc{grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);row-gap:2.2rem;padding-top:5rem}
+.sc-head{grid-column:1/-1;text-align:center;display:grid;justify-items:center}
+.sc-head p{max-width:52ch}
+.sc-tabs{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6rem;margin:0;padding:0;list-style:none}
+.sc-tab{position:relative;overflow:hidden;display:grid;grid-template-columns:auto 1fr;gap:.25rem .7rem;align-items:center;text-align:left;padding:.85rem .95rem 1rem;border-radius:14px;border:1px solid #2A231E;background:#141110;color:#CDBFAF;font:inherit;cursor:pointer;transition:background .35s,border-color .35s,color .35s,transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.sc-tab:hover{border-color:#4A3D31;color:#F6EFE6;transform:translateY(-2px)}
+.sc-tab:focus-visible{outline:2px solid #E2B867;outline-offset:2px}
+.sc-tab .sc-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(226,184,103,.08);color:#B39565;transition:background .35s,color .35s;grid-row:span 2}
+.sc-tab .sc-ic svg{width:18px;height:18px}
+.sc-tab b{font-size:.92rem;letter-spacing:-.01em;line-height:1.2}
+.sc-tab small{font-size:.74rem;color:#8C7F72;line-height:1.3}
+.sc-tab[aria-selected="true"]{background:linear-gradient(180deg,#221B16,#181310);border-color:rgba(226,184,103,.55);color:#F6EFE6;box-shadow:0 18px 40px -24px rgba(226,184,103,.45)}
+.sc-tab[aria-selected="true"] .sc-ic{background:#E2B867;color:#1A140F}
+.sc-tab[aria-selected="true"] small{color:#B8AA99}
+.sc-tab .sc-bar{position:absolute;left:0;bottom:0;height:2px;width:100%;background:linear-gradient(90deg,#F3C978,#E58FA6);transform:scaleX(0);transform-origin:0 50%;opacity:0}
+.sc-tab[aria-selected="true"] .sc-bar{opacity:1}
+.sc.sc-auto .sc-tab[aria-selected="true"] .sc-bar{animation:scBar var(--sc-dur,7000ms) linear forwards}
+.sc.sc-paused .sc-tab[aria-selected="true"] .sc-bar{animation-play-state:paused}
+.sc:not(.sc-auto) .sc-tab[aria-selected="true"] .sc-bar{transform:scaleX(1);transition:transform .5s}
+@keyframes scBar{to{transform:scaleX(1)}}
+.sc-txt{position:relative;min-height:330px}
+.sc-copy{position:absolute;inset:0 0 auto 0;opacity:0;visibility:hidden;transform:translateY(18px);transition:opacity .5s,transform .7s cubic-bezier(.2,.8,.2,1),visibility 0s .5s}
+.sc-copy.on{position:relative;opacity:1;visibility:visible;transform:none;transition:opacity .6s .12s,transform .8s .12s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.sc-copy h3{font-size:clamp(1.5rem,2.4vw,2.1rem);letter-spacing:-.035em;line-height:1.1;margin:0 0 .8rem;color:#F6EFE6}
+.sc-copy ul{list-style:none;padding:0;margin:1.4rem 0 0;display:grid;gap:.7rem}
+.sc-copy li{display:grid;grid-template-columns:22px 1fr;gap:.6rem;color:#D8CCBE;font-size:.98rem;line-height:1.45}
+.sc-copy li::before{content:"";width:18px;height:18px;margin-top:.15rem;border-radius:50%;background:rgba(226,184,103,.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E2B867' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/11px no-repeat}
+.sc-copy .sc-cta{display:inline-flex;margin-top:1.6rem}
+.sc-dev{position:relative}
+.sc-dev .device{position:relative}
+.sc-glow{position:absolute;inset:8% 6% -4%;background:radial-gradient(60% 60% at 50% 50%,rgba(226,184,103,.22),transparent 70%);filter:blur(30px);z-index:-1;transition:background .8s}
+.sc .screen{background:#0D0B0A}
+.sc .scaler{pointer-events:none}
+.sc-pane{position:absolute;inset:0;overflow:hidden;opacity:0;visibility:hidden;transform:translateX(70px) scale(.985);filter:blur(8px);transition:opacity .45s ease,transform .7s cubic-bezier(.2,.8,.2,1),filter .5s ease,visibility 0s .7s}
+.sc-pane.on{opacity:1;visibility:visible;transform:none;filter:none;transition:opacity .55s ease .08s,transform .8s cubic-bezier(.2,.8,.2,1) .08s,filter .55s ease .08s,visibility 0s}
+.sc-pane.out{opacity:0;visibility:visible;transform:translateX(-70px) scale(.985);filter:blur(8px)}
+.sc-pane.on .sc-i{animation:scIn .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms + 220ms)}
+@keyframes scIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.sc-touch{position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;z-index:20;pointer-events:none;opacity:0;background:radial-gradient(circle,rgba(255,255,255,.95) 0 9px,rgba(255,255,255,.35) 10px 20px,transparent 21px);box-shadow:0 6px 20px rgba(0,0,0,.25);transition:transform .9s cubic-bezier(.45,.05,.2,1),opacity .35s}
+.sc-touch.show{opacity:1}
+.sc-touch.tap::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.9);animation:scTap .7s ease-out forwards}
+@keyframes scTap{from{transform:scale(.4);opacity:1}to{transform:scale(1.9);opacity:0}}
+.sc-hit{animation:scHit .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes scHit{40%{transform:scale(.94)}100%{transform:none}}
+/* écrans de démonstration (1280 × 800) */
+.scm{position:absolute;inset:0;background:#F4F5F1;color:#1C1917;font-size:20px;line-height:1.35;display:flex;flex-direction:column}
+.scm *{box-sizing:border-box}
+.scm-top{height:84px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:#fff;border-bottom:1px solid #E7E5E4}
+.scm-top b{font-size:26px;letter-spacing:-.02em}
+.scm-top span{color:#6B6460;font-size:18px}
+.scm-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 18px;font-weight:700;font-size:17px;background:#EEF2EC;color:#3F5A3A}
+.scm-pill.or{background:#FBF0DA;color:#8A5E10}
+.scm-pill.gr{background:#E3F3EA;color:#16794A}
+.scm-pill.rd{background:#FCE8E3;color:#A33A1F}
+.scm-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:64px;padding:0 34px;border-radius:16px;background:#587A52;color:#fff;font-weight:800;font-size:21px}
+.scm-btn.lt{background:#fff;color:#1C1917;border:2px solid #E7E5E4}
+.scm-card{background:#fff;border:1px solid #E7E5E4;border-radius:20px}
+.scm-h{font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8C857F;margin:0 0 14px}
+/* sur-mesure */
+.scm-cake{flex:1;display:grid;grid-template-columns:540px 1fr;gap:36px;padding:34px 40px}
+.scm-vis{border-radius:24px;background:radial-gradient(80% 70% at 50% 45%,#2B221C,#100D0B);position:relative;display:grid;place-items:center;overflow:hidden}
+.scm-vis canvas{width:92%;height:auto}
+.scm-vis .scm-pill{position:absolute;left:22px;top:22px;background:rgba(255,255,255,.12);color:#F3D9A5}
+.scm-steps{display:grid;gap:22px;align-content:start}
+.scm-chips{display:flex;flex-wrap:wrap;gap:12px}
+.scm-chip{padding:14px 22px;border-radius:14px;background:#fff;border:2px solid #E7E5E4;font-weight:700;font-size:19px}
+.scm-chip.sel{border-color:#587A52;background:#EEF2EC;color:#2F4A2B}
+.scm-qty{display:flex;align-items:center;gap:18px}
+.scm-qty i{width:54px;height:54px;border-radius:14px;border:2px solid #E7E5E4;display:grid;place-items:center;font-style:normal;font-size:28px;font-weight:700;background:#fff}
+.scm-qty b{font-size:30px;min-width:120px;text-align:center}
+.scm-tot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding-top:22px;border-top:1px solid #E7E5E4}
+.scm-tot b{font-size:38px;letter-spacing:-.03em}
+.scm-tot small{display:block;color:#6B6460;font-size:16px}
+/* arrière-boutique */
+.scm-back{flex:1;display:grid;grid-template-columns:220px 1fr 390px;min-height:0}
+.scm-nav{background:#1D2125;color:#C9CED4;padding:26px 18px;display:grid;align-content:start;gap:6px;font-size:18px}
+.scm-nav .lg{color:#fff;font-weight:800;font-size:24px;margin:0 10px 22px}
+.scm-nav span{padding:13px 14px;border-radius:12px}
+.scm-nav span.on{background:#2E3A2C;color:#BFE0B5;font-weight:700}
+.scm-main{padding:28px 30px;display:grid;gap:20px;align-content:start;min-width:0}
+.scm-days{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.scm-day{background:#fff;border:2px solid #E7E5E4;border-radius:14px;padding:12px;text-align:center;position:relative;font-size:16px;color:#6B6460}
+.scm-day b{display:block;font-size:26px;color:#1C1917}
+.scm-day.on{border-color:#587A52;background:#EEF2EC}
+.scm-day em{position:absolute;top:-10px;right:-8px;min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:#E36414;color:#fff;font-style:normal;font-weight:800;font-size:16px;display:grid;place-items:center;transition:transform .3s}
+.scm-ord{display:grid;grid-template-columns:96px 1fr auto;gap:18px;align-items:center;padding:14px 22px;transition:opacity .4s}
+.scm-ord .t{font-size:26px;font-weight:800}
+.scm-ord .n{font-weight:700}
+.scm-ord .d{color:#6B6460;font-size:17px}
+.scm-ord.done{opacity:.55}
+.scm-prod{background:#fff;border-left:1px solid #E7E5E4;padding:28px 26px;display:grid;gap:12px;align-content:start}
+.scm-prod div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:#F7F7F5;font-size:18px}
+.scm-prod div>span:first-child{flex:1;min-width:0}
+.scm-prod div b{white-space:nowrap}
+.scm-prod div b{font-size:20px}
+.scm-ok{width:46px;height:46px;border-radius:12px;border:2px solid #CFD8CC;display:grid;place-items:center;color:transparent;transition:background .3s,color .3s,border-color .3s}
+.scm-ok.on{background:#16794A;border-color:#16794A;color:#fff}
+/* commande en ligne */
+.scm-web{flex:1;display:grid;grid-template-columns:1fr 400px;gap:30px;padding:30px 40px;min-height:0}
+.scm-seg{display:inline-grid;grid-template-columns:1fr 1fr;background:#E9EAE5;border-radius:16px;padding:6px;gap:6px;width:520px}
+.scm-seg span{text-align:center;padding:14px;border-radius:12px;font-weight:700;color:#6B6460}
+.scm-seg span.on{background:#fff;color:#1C1917;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.scm-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.scm-slot{padding:16px 0;text-align:center;border-radius:14px;background:#fff;border:2px solid #E7E5E4;font-weight:700;font-size:20px}
+.scm-slot.full{background:transparent;color:#B5AFA9;text-decoration:line-through;border-style:dashed}
+.scm-slot.sel{border-color:#587A52;background:#EEF2EC;color:#2F4A2B}
+.scm-sum{padding:26px;display:grid;gap:14px;align-content:start}
+.scm-sum .l{display:flex;justify-content:space-between;font-size:18px}
+.scm-sum .tt{display:flex;justify-content:space-between;font-size:26px;font-weight:800;padding-top:14px;border-top:1px solid #E7E5E4}
+.scm-mail{display:flex;gap:10px;align-items:center;font-size:16px;color:#16794A;background:#E3F3EA;border-radius:12px;padding:12px 14px}
+/* réseaux sociaux */
+.scm-soc{flex:1;display:grid;grid-template-columns:330px 1fr 300px;gap:28px;padding:30px 40px;min-height:0}
+.scm-list{display:grid;gap:10px;align-content:start}
+.scm-list div{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:#fff;border:2px solid #E7E5E4;font-weight:700;font-size:18px}
+.scm-list div.sel{border-color:#587A52;background:#EEF2EC}
+.scm-list i{font-style:normal;font-size:30px}
+.scm-script{padding:24px 26px;display:grid;gap:14px;align-content:start}
+.scm-sc{display:grid;grid-template-columns:90px 1fr;gap:14px;font-size:17px;padding:12px 0;border-bottom:1px solid #F0EEEC}
+.scm-sc b{color:#587A52}
+.scm-phone{border-radius:34px;background:#111;padding:12px;height:100%;max-height:640px}
+.scm-reel{height:100%;border-radius:24px;background:linear-gradient(160deg,#3A2A1E,#120E0B 60%);color:#fff;position:relative;overflow:hidden;display:grid;place-items:center;text-align:center}
+.scm-reel .em{font-size:130px;animation:scFloat 3.2s ease-in-out infinite}
+.scm-reel .cap{position:absolute;left:18px;right:18px;bottom:28px;font-weight:800;font-size:24px;line-height:1.2}
+.scm-reel .cap small{display:block;font-size:16px;font-weight:600;color:#F3D9A5;margin-top:6px}
+.scm-reel .tag{position:absolute;top:18px;left:18px;background:#E36414;border-radius:999px;padding:6px 14px;font-size:15px;font-weight:800}
+@keyframes scFloat{50%{transform:translateY(-14px) rotate(-4deg)}}
+/* pied de page */
+.lp3 .lp-foot{border-top-color:#2A231E;color:#9E8F80;font-size:.9rem}
+.lp3 .lp-foot a{color:#E2B867;text-decoration:none;font-weight:700}
+.lp3 .lp-foot a:hover{text-decoration:underline}
+.lp3 .lp-foot a.auth-logo{color:#F6EFE6;margin:0;text-decoration:none}
+.lp-end .row{justify-content:center}
+.lp-end .btn-ghost{color:#F6EFE6;border-color:rgba(255,255,255,.2)}
+@media(max-width:1100px){.sc-tabs{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:.4rem;scrollbar-width:none}.sc-tabs::-webkit-scrollbar{display:none}.sc-tab{scroll-snap-align:start}}
+@media(max-width:940px){.lp3 .sc{grid-template-columns:1fr;padding-top:3rem}.sc-dev{order:3}.sc-txt{order:4;min-height:0}.sc-tab small{display:none}.sc-tab .sc-ic{grid-row:auto}.sc-tabs{grid-auto-columns:max-content}}
+@media(prefers-reduced-motion:reduce){.sc-pane,.sc-pane.on,.sc-copy,.sc-copy.on{transition:none;filter:none;transform:none}.sc-pane.on .sc-i{animation:none}.sc-touch{display:none}.sc-tab .sc-bar{animation:none!important}.scm-reel .em{animation:none}}
 /* gâteau 3D de la borne */
 .k-feature:has(.fv3){min-height:320px;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
 @media(max-width:600px){.k-feature:has(.fv3){grid-template-columns:1fr}}
@@ -1706,7 +1843,7 @@ function mountSpinner(cv,p){
 }
 
 
-function fitDevices(){document.querySelectorAll('.device .screen').forEach(sc=>{const s=sc.clientWidth/1280;const el=sc.querySelector('.scaler');if(el&&s>0){el.style.transform='scale('+s+')';el.style.height=(sc.clientHeight/s)+'px';}});}
+function fitDevices(){document.querySelectorAll('.device .screen').forEach(sc=>{const s=sc.clientWidth/1280;if(s>0)sc.querySelectorAll('.scaler').forEach(el=>{if(el.closest('.screen')!==sc)return;el.style.transform='scale('+s+')';el.style.height=(sc.clientHeight/s)+'px';});});}
 window.addEventListener('resize',fitDevices);
 function afterRender(){
   fitDevices();
@@ -1751,11 +1888,10 @@ function demoTenant(){
     cake:{sizes:[{id:'s',label:'6 parts',servings:6,price:2400}],flavors:[{id:'f',label:'Vanille',price:0}],decos:[]},orders:[],staff:[],videos:[]};
 }
 function viewHub(){
-  const feats=[['store','Borne en libre-service','Catalogue photo, filtres allergènes et commande en quelques touches, sans file d’attente.'],['cake','Gâteaux sur-mesure','Familles, variétés, nombre de parts et décor : le prix se calcule tout seul.'],['calendar','Arrière-boutique','Calendrier des retraits et liste de production du jour, mis à jour en temps réel.'],['video','Vidéos réseaux sociaux','Des scripts de vidéos prêts à tourner à partir de vos produits.']];
   const lbl=[['Décoration & finitions','Glaçage, fruits frais, inscription, photos d’inspiration.'],['Variété au choix','Fraisier, chocolat, tarte flan ou pommes, à votre prix.'],['Le bon nombre de parts','Tailles fixes ou choix libre, à la part ou au chou.']];
   return `<div class="lp lp3">
   <section class="h3"><div class="h3-sticky">
-    <nav class="lp-nav h3-nav"><a class="auth-logo" style="margin:0" href="#/">${LOGO}Prox-e</a><div class="links">${installBtn('btn btn-ghost')}<a class="btn btn-ghost" href="#/activer">Activer un abonnement</a><a class="btn" href="#/admin">Administration</a></div></nav>
+    <nav class="lp-nav h3-nav"><a class="auth-logo" style="margin:0" href="#/">${LOGO}Prox-e</a><div class="links">${installBtn('btn btn-ghost')}<a class="btn btn-ghost" href="${contactHref()}">Contact</a><a class="btn btn-ghost" href="#/activer">Activer un abonnement</a><a class="btn" href="#/admin">Administration</a></div></nav>
     <div class="h3-stage" data-hero3d><canvas class="h3-fb" data-thumb width="560" height="400" aria-hidden="true"></canvas>
       ${lbl.map(([h,p],i)=>`<div data-lbl="${i}" class="h3-lbl${i===1?' l':''}" aria-hidden="true"><i></i><div><b>${h}</b><span>${p}</span></div></div>`).join('')}</div>
     <div class="h3-copy">
@@ -1768,11 +1904,132 @@ function viewHub(){
     <p class="h3-story" aria-hidden="true">Vos clients composent leur gâteau, étage par étage.</p>
     <div class="h3-hint" aria-hidden="true"><span class="mouse"><i></i></span>Faites défiler · glissez pour tourner</div>
   </div></section>
-  <section class="lp-show"><div class="lp-show-txt" data-reveal><span class="kicker">La borne</span><h2>Aux couleurs de votre maison, en libre-service.</h2><p>Vos photos, vos prix, vos lots. Le client choisit, la commande arrive directement dans l’arrière-boutique.</p></div>
-    <div class="tilt" data-reveal><div class="device"><div class="screen"><div class="scaler">${kioskMenu(demoTenant(),{cat:'all',ex:[],cart:[]},true)}</div></div></div></div></section>
-  <section class="features">${feats.map(([i,h,p],k)=>`<div class="card feat" data-reveal style="--d:${k*90}ms"><span class="fic">${ic(i)}</span><h3>${h}</h3><p>${p}</p></div>`).join('')}</section>
-  <section class="lp-end" data-reveal><h2>Prêt à ouvrir votre borne ?</h2><p>Activez votre abonnement avec le code reçu par e-mail.</p><a class="btn btn-lg" href="#/activer">Activer un abonnement</a></section></div>`;
+  ${scSection()}
+  <section class="lp-end" data-reveal><h2>Prêt à ouvrir votre borne ?</h2><p>Activez votre abonnement avec le code reçu par e-mail, ou écrivez-nous pour une démonstration dans votre boutique.</p><div class="row"><a class="btn btn-lg" href="#/activer">Activer un abonnement</a><a class="btn btn-lg btn-ghost" href="${contactHref()}">${ic('mail')}Nous contacter</a></div></section>
+  <footer class="lp-foot"><a class="auth-logo" href="#/">${LOGO}Prox-e</a><span>Une question ? Écrivez-nous à <a href="${contactHref()}">${CONTACT_EMAIL}</a></span><span>© ${new Date().getFullYear()} Prox-e</span></footer></div>`;
 }
+/* ---------- accueil : vitrine à onglets sur la tablette ---------- */
+const CONTACT_EMAIL='contact@proxe-commande.fr';
+const contactHref=s=>`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(s||'Découvrir Prox-e')}`;
+const SC_TABS=[
+  {k:'borne',ic:'store',t:'Borne de commande',s:'Le client commande seul',
+    h:'Une borne aux couleurs de votre maison.',p:'Vos photos, vos prix, vos lots. Le client choisit, la commande arrive directement dans l’arrière-boutique.',
+    li:['Catalogue photo sur fond noir, vue 360° en vidéo','Filtres allergènes et lots à prix dégressif','Affiche d’accueil pour mettre en avant une nouveauté']},
+  {k:'cake',ic:'cake',t:'Gâteaux sur-mesure',s:'Le prix se calcule seul',
+    h:'Le sur-mesure, sans erreur de calcul.',p:'Layer cake, number cake, croquembouche, tartes : le client compose son gâteau, Prox-e calcule le prix et respecte vos délais.',
+    li:['Familles, parfums et nombre de parts que vous fixez','Topper et options activables famille par famille','Galerie de vos réalisations pour inspirer le client']},
+  {k:'back',ic:'calendar',t:'Arrière-boutique',s:'Commandes et production',
+    h:'Toute la production, en temps réel.',p:'Chaque commande arrive dans le calendrier des retraits. Le pâtissier valide, le compteur du jour diminue.',
+    li:['Calendrier des retraits avec le nombre de commandes restantes','Liste de production du jour, imprimable','Statut « payée » ou « à payer au retrait »']},
+  {k:'web',ic:'cart',t:'Commande en ligne',s:'Click & collect et livraison',
+    h:'Vos clients commandent aussi depuis leur téléphone.',p:'Un lien à partager sur vos réseaux : le client choisit son créneau, paie en ligne et reçoit sa confirmation par e-mail.',
+    li:['Click & collect ou livraison, avec vos tarifs et votre zone','Créneaux qui disparaissent quand ils sont complets','Récapitulatif et numéro de commande envoyés par e-mail']},
+  {k:'soc',ic:'video',t:'Réseaux sociaux',s:'Vidéos prêtes à tourner',
+    h:'De quoi publier, chaque semaine.',p:'Choisissez vos produits du moment : Prox-e prépare le script de la vidéo, plan par plan, prêt à tourner et à publier.',
+    li:['Scripts adaptés au format vertical (Reels, TikTok)','Basés sur vos vrais produits et vos prix','Un ton qui ressemble à votre maison']}];
+const SC_DUR=7000;
+function scPane(k){
+  const top=(a,b)=>`<div class="scm-top sc-i"><b>${a}</b><span>${b}</span></div>`;
+  if(k==='borne')return `<div class="scaler">${kioskMenu(demoTenant(),{cat:'all',ex:[],cart:[]},true)}</div>`;
+  if(k==='cake')return `<div class="scaler"><div class="scm">${top('Maison Lefèvre','Gâteau sur-mesure · 48 h à l’avance')}
+    <div class="scm-cake"><div class="scm-vis sc-i" style="--i:1"><span class="scm-pill">Layer cake · 2 étages</span><canvas data-thumb width="560" height="400" aria-hidden="true"></canvas></div>
+    <div class="scm-steps"><div class="sc-i" style="--i:2"><p class="scm-h">1 · Famille</p><div class="scm-chips"><span class="scm-chip sel">Layer cake</span><span class="scm-chip">Number cake</span><span class="scm-chip">Croquembouche</span><span class="scm-chip">Tartes</span></div></div>
+    <div class="sc-i" style="--i:3"><p class="scm-h">2 · Nombre de parts</p><div class="scm-qty"><i>−</i><b data-sc-parts>12 parts</b><i data-tap>+</i></div></div>
+    <div class="sc-i" style="--i:4"><p class="scm-h">3 · Parfum par étage</p><div class="scm-chips"><span class="scm-chip sel">Vanille · fraise</span><span class="scm-chip">Chocolat</span><span class="scm-chip">Pistache</span></div></div>
+    <div class="sc-i" style="--i:5"><p class="scm-h">4 · Décor</p><div class="scm-chips"><span class="scm-chip sel">Topper personnalisé +5 €</span><span class="scm-chip">Fruits frais</span></div></div>
+    <div class="scm-tot sc-i" style="--i:6"><div><small>Total calculé automatiquement</small><b data-sc-price>59,00 €</b></div><span class="scm-btn">Ajouter au panier</span></div></div></div></div></div>`;
+  if(k==='back'){const days=[['Lun','16',4],['Mar','17',7],['Mer','18',3],['Jeu','19',5],['Ven','20',9],['Sam','21',14]];
+    const ords=[['08:30','Mme Martin','Layer cake 12 parts · vanille-fraise','gr','Payée'],['10:00','M. Durand','24 croissants · 2 baguettes','or','À payer au retrait'],['11:30','Mme Petit','Number cake « 30 » · 20 parts','gr','Payée'],['14:00','Mairie de Saint-Just','Buffet traiteur · 40 personnes','or','À payer au retrait'],['17:30','M. Leroy','Tarte aux pommes · 8 personnes','gr','Payée']];
+    return `<div class="scaler"><div class="scm"><div class="scm-back"><div class="scm-nav"><span class="lg">Prox-e</span><span class="on">Commandes</span><span>Catalogue</span><span>Sur-mesure</span><span>Vitrine et borne</span><span>Vente en ligne</span><span>Équipe</span></div>
+    <div class="scm-main"><div class="sc-i" style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:30px;letter-spacing:-.02em">Commandes</b><span class="scm-pill">Aujourd’hui · lundi 16</span></div>
+    <div class="scm-days sc-i" style="--i:1">${days.map(([d,n,c],i)=>`<div class="scm-day${i?'':' on'}">${d}<b>${n}</b><em${i?'':' data-sc-count'}>${c}</em></div>`).join('')}</div>
+    ${ords.map(([h,n,d,c,s],i)=>`<div class="scm-card scm-ord sc-i" style="--i:${i+2}"${i?'':' data-sc-ord'}><span class="t">${h}</span><div><div class="n">${n}</div><div class="d">${d}</div></div><span class="scm-pill ${c}">${s}</span></div>`).join('')}</div>
+    <div class="scm-prod"><p class="scm-h sc-i">Production du jour</p>${[['Croissants pur beurre','36'],['Baguettes tradition','48'],['Layer cake vanille-fraise','1'],['Number cake « 30 »','1'],['Tartes aux pommes','3'],['Mini-quiches traiteur','40']].map(([a,b],i)=>`<div class="sc-i" style="--i:${i+2}"><span>${a}</span><span style="display:flex;gap:14px;align-items:center"><b>× ${b}</b><span class="scm-ok"${i===2?' data-tap':''}>✓</span></span></div>`).join('')}</div></div></div></div>`;}
+  if(k==='web'){const sl=['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','16:00','16:30'];
+    return `<div class="scaler"><div class="scm">${top('Maison Lefèvre','Commande en ligne · proxe-commande.fr')}
+    <div class="scm-web"><div style="display:grid;gap:24px;align-content:start"><div class="sc-i"><p class="scm-h">Mode de retrait</p><div class="scm-seg"><span class="on">Click & collect</span><span>Livraison</span></div></div>
+    <div class="sc-i" style="--i:1"><p class="scm-h">Samedi 21 novembre · choisissez un créneau</p><div class="scm-slots">${sl.map((s,i)=>`<span class="scm-slot${[1,2,6].includes(i)?' full':''}"${i===4?' data-tap':''}>${s}</span>`).join('')}</div></div>
+    <div class="scm-card sc-i" style="--i:2;padding:20px 24px;display:flex;gap:16px;align-items:center"><span style="font-size:40px">🛵</span><div><b>Livraison possible</b><div style="color:#6B6460;font-size:17px">Votre zone, vos tarifs, vos créneaux : réglés par la boutique.</div></div></div>
+    <div class="scm-card sc-i" style="--i:3;padding:20px 24px;display:flex;gap:16px;align-items:center"><span style="font-size:40px">📱</span><div><b>Lien à partager</b><div style="color:#6B6460;font-size:17px">Instagram, Facebook, SMS : vos clients commandent où qu’ils soient.</div></div></div></div>
+    <div class="scm-card scm-sum sc-i" style="--i:4"><p class="scm-h" style="margin:0">Votre commande</p><div class="l"><span>6 croissants</span><b>7,20 €</b></div><div class="l"><span>1 pain de campagne</span><b>4,80 €</b></div><div class="l"><span>Lot de 5 donuts</span><b>5,00 €</b></div><div class="tt"><span>Total</span><span>17,00 €</span></div><span class="scm-btn">Payer en ligne</span><div class="scm-mail">✓ Confirmation et numéro envoyés par e-mail</div></div></div></div></div>`;}
+  const prods=[['🥐','Croissant pur beurre',1],['🍩','Donuts · 5 pour 5 €',0],['🎂','Layer cake fraise',1],['🥖','Baguette tradition',0]];
+  const scenes=[['0–3 s','Gros plan sur le feuilletage qui craque'],['3–8 s','Le layer cake tourne sur fond noir'],['8–12 s','Prix et lot du moment à l’écran'],['12–15 s','« Commandez en ligne, retrait dès 7 h »']];
+  return `<div class="scaler"><div class="scm">${top('Vidéos réseaux','Script généré à partir de vos produits')}
+    <div class="scm-soc"><div class="scm-list"><p class="scm-h sc-i">Produits à mettre en avant</p>${prods.map(([e,n,s],i)=>`<div class="sc-i${s?' sel':''}" style="--i:${i+1}"${i===3?' data-tap':''}><i>${e}</i>${n}</div>`).join('')}</div>
+    <div class="scm-card scm-script sc-i" style="--i:2"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:24px">Le réveil gourmand</b><span class="scm-pill or">Reel · 15 s</span></div>${scenes.map(([a,b])=>`<div class="scm-sc"><b>${a}</b><span>${b}</span></div>`).join('')}<div style="color:#587A52;font-weight:700;font-size:17px">#boulangerie #faitmaison #layercake</div><div style="display:flex;gap:12px;margin-top:8px"><span class="scm-btn">Nouveau script</span><span class="scm-btn lt">Copier</span></div></div>
+    <div class="scm-phone sc-i" style="--i:3"><div class="scm-reel"><span class="tag">Nouveau</span><span class="em">🎂</span><div class="cap">Layer cake fraise, monté à la main<small>À commander 48 h à l’avance</small></div></div></div></div></div></div>`;
+}
+function scSection(){
+  return `<section class="lp-show sc" data-sc>
+    <div class="sc-head" data-reveal><span class="kicker">Découvrir Prox-e</span><h2>Toute votre boutique, sur une seule tablette.</h2><p>Choisissez ce qui vous intéresse : la tablette vous montre l’écran correspondant.</p></div>
+    <div class="sc-tabs" role="tablist" aria-label="Fonctions de Prox-e" data-reveal>${SC_TABS.map((x,i)=>`<button type="button" class="sc-tab" role="tab" id="sc-tab-${x.k}" aria-controls="sc-copy-${x.k}" aria-selected="${i?'false':'true'}" tabindex="${i?'-1':'0'}" data-sc-tab="${i}"><span class="sc-ic">${ic(x.ic)}</span><b>${x.t}</b><small>${x.s}</small><span class="sc-bar"></span></button>`).join('')}</div>
+    <div class="sc-txt">${SC_TABS.map((x,i)=>`<div class="sc-copy${i?'':' on'}" id="sc-copy-${x.k}" role="tabpanel" aria-labelledby="sc-tab-${x.k}" aria-hidden="${i?'true':'false'}"><span class="kicker">${x.t}</span><h3>${x.h}</h3><p>${x.p}</p><ul>${x.li.map(l=>`<li>${l}</li>`).join('')}</ul><a class="btn btn-lg sc-cta" href="${contactHref('Prox-e : '+x.t)}">${ic('mail')}Demander une démo</a></div>`).join('')}</div>
+    <div class="sc-dev tilt" data-reveal><div class="sc-glow"></div><div class="device"><div class="screen">${SC_TABS.map((x,i)=>`<div class="sc-pane${i?'':' on'}" data-sc-pane="${i}" aria-hidden="true">${scPane(x.k)}</div>`).join('')}<span class="sc-touch" aria-hidden="true"></span></div></div></div>
+  </section>`;
+}
+const SC={i:0,timer:0,tap:[],auto:true,vis:false,hover:false,io:null};
+function scClear(){clearTimeout(SC.timer);SC.timer=0;SC.tap.forEach(clearTimeout);SC.tap=[];}
+function scGo(i,user){
+  const root=document.querySelector('[data-sc]');if(!root)return scClear();
+  const n=SC_TABS.length;i=(i+n)%n;
+  if(user){SC.auto=false;root.classList.remove('sc-auto');}
+  const prev=SC.i;SC.i=i;scClear();SC.left=0;
+  root.querySelectorAll('[data-sc-tab]').forEach((b,k)=>{const on=k===i;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;if(on){const bar=b.querySelector('.sc-bar');bar.style.animation='none';void bar.offsetWidth;bar.style.animation='';}});
+  root.querySelectorAll('.sc-copy').forEach((c,k)=>{c.classList.toggle('on',k===i);c.setAttribute('aria-hidden',k!==i);});
+  root.querySelectorAll('[data-sc-pane]').forEach((p,k)=>{p.classList.remove('out');if(k===i)p.classList.add('on');else if(p.classList.contains('on')){p.classList.remove('on');if(k===prev){p.classList.add('out');setTimeout(()=>p.classList.remove('out'),700);}}});
+  const t=root.querySelector('.sc-tab[aria-selected="true"]');
+  if(user&&t&&t.parentElement.scrollWidth>t.parentElement.clientWidth)t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  scDemo(root,i);scNext();
+}
+function scNext(){if(SC.timer)SC.left=Math.max(800,(SC.left||SC_DUR)-(performance.now()-SC.t0));clearTimeout(SC.timer);SC.timer=0;
+  const root=document.querySelector('[data-sc]');if(!root||!SC.auto||H3_RM())return;
+  root.classList.toggle('sc-paused',!SC.vis||SC.hover);
+  if(SC.vis&&!SC.hover&&!document.hidden){SC.t0=performance.now();SC.timer=setTimeout(()=>scGo(SC.i+1),SC.left||SC_DUR);}
+}
+/* doigt virtuel : il montre ce que le client touche sur l’écran */
+function scDemo(root,i){
+  const pane=root.querySelector(`[data-sc-pane="${i}"]`),touch=root.querySelector('.sc-touch');if(!pane||!touch||H3_RM())return;
+  touch.classList.remove('show','tap');
+  const later=(ms,f)=>SC.tap.push(setTimeout(f,ms));
+  later(1300,()=>{
+    let tg=pane.querySelector('[data-tap]');
+    if(!tg)tg=pane.querySelector('.kiosk .k-add');
+    if(!tg)return;
+    const sc=touch.parentElement,r=tg.getBoundingClientRect(),s=sc.getBoundingClientRect();if(!s.width||!r.width)return;
+    const x=(r.left-s.left+r.width/2)/s.width*sc.clientWidth,y=(r.top-s.top+r.height/2)/s.height*sc.clientHeight;
+    touch.style.transition='none';touch.style.transform=`translate(${x+90}px,${y+110}px)`;void touch.offsetWidth;touch.style.transition='';
+    touch.classList.add('show');touch.style.transform=`translate(${x}px,${y}px)`;
+    later(950,()=>{touch.classList.add('tap');tg.classList.remove('sc-hit');void tg.offsetWidth;tg.classList.add('sc-hit');scEffect(pane,tg);});
+    later(2300,()=>touch.classList.remove('show','tap'));
+  });
+}
+function scEffect(pane,tg){
+  const k=SC_TABS[+pane.dataset.scPane].k;
+  if(k==='cake'){const p=pane.querySelector('[data-sc-parts]'),pr=pane.querySelector('[data-sc-price]');if(p)p.textContent='14 parts';if(pr)pr.textContent='68,00 €';}
+  if(k==='back'){tg.classList.add('on');const c=pane.querySelector('[data-sc-count]');if(c){c.textContent='3';c.style.transform='scale(1.3)';setTimeout(()=>c.style.transform='',300);}const o=pane.querySelector('[data-sc-ord]');if(o)o.classList.add('done');}
+  if(k==='web')tg.classList.add('sel');
+  if(k==='soc')tg.classList.add('sel');
+}
+function scReset(root){/* remet les écrans de démo dans leur état de départ */
+  root.querySelectorAll('[data-sc-pane]').forEach(p=>{const i=+p.dataset.scPane;if(i===SC.i)return;const k=SC_TABS[i].k;if(k==='borne')return;p.innerHTML=scPane(k);});
+  fitDevices();root.querySelectorAll('canvas[data-thumb]').forEach(c=>drawCake(c.getContext('2d'),c.width,c.height,0.5));
+}
+function scMount(){
+  scClear();if(SC.io){SC.io.disconnect();SC.io=null;}
+  const root=document.querySelector('[data-sc]');if(!root)return;
+  SC.i=0;SC.auto=!H3_RM();SC.left=0;SC.vis=false;SC.hover=false;SC.started=false;
+  root.style.setProperty('--sc-dur',SC_DUR+'ms');root.classList.toggle('sc-auto',SC.auto);
+  const tabs=[...root.querySelectorAll('[data-sc-tab]')];
+  tabs.forEach((b,k)=>{b.onclick=()=>scGo(k,true);
+    b.onkeydown=e=>{const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;e.preventDefault();const j=(k+d+tabs.length)%tabs.length;scGo(j,true);tabs[j].focus();};});
+  const dev=root.querySelector('.sc-dev');
+  dev.onmouseenter=()=>{SC.hover=true;scNext();};
+  dev.onmouseleave=()=>{SC.hover=false;scNext();};
+  root.addEventListener('transitionend',e=>{if(e.target.matches('[data-sc-pane]')&&!e.target.classList.contains('on')&&e.propertyName==='opacity')scReset(root);});
+  if('IntersectionObserver'in window){SC.io=new IntersectionObserver(es=>{const v=es[0].isIntersecting;if(v===SC.vis)return;SC.vis=v;if(v&&!SC.started){SC.started=true;scDemo(root,SC.i);}scNext();},{threshold:.35});SC.io.observe(dev);}
+  else{SC.vis=true;scNext();}
+}
+document.addEventListener('visibilitychange',()=>{if(document.querySelector('[data-sc]'))scNext();});
 /* ---------- gâteau sur-mesure en 3D (bannière de la borne) ---------- */
 const K3={vis:false,yaw:.6,yawV:0,raf:0,last:0};
 const k3FS=()=>H3_FS.replace('uK>8.5','uK>19.5').replace('else{col*=.9+.15*n3(vO*30.);rough=.35;spec=.35;sss=.5;}',
@@ -1890,6 +2147,7 @@ function k3Frame(force){
 
 function hubFx(){
   cake3dMount();
+  scMount();
   const host=document.querySelector('[data-hero3d]');
   if(host)hero3dMount(host);else hero3dPause();
   const els=document.querySelectorAll('[data-reveal]');if(!els.length)return;
