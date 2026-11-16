@@ -711,6 +711,34 @@ h3.lbl{font-size:.8rem;font-weight:800;color:var(--muted);margin:0 0 .5rem}
 
 /* accueil 3D */
 .lp3{background:#0D0B0A}
+/* ---------- Mon espace (accueil de l'application) ---------- */
+.hub2{min-height:100svh;position:relative;overflow:hidden;color:#F3ECE2;display:flex;flex-direction:column}
+.hub2-bg i{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none}
+.hub2-bg i:first-child{width:620px;height:620px;top:-220px;right:-200px;background:radial-gradient(circle,rgba(122,84,50,.75),transparent 70%)}
+.hub2-bg i:last-child{width:560px;height:560px;bottom:-240px;left:-220px;background:radial-gradient(circle,rgba(79,100,80,.6),transparent 70%)}
+.hub2-nav{position:relative;z-index:2}
+.hub2-main{position:relative;z-index:1;flex:1;display:grid;place-items:center;align-content:center;gap:1.4rem;padding:2rem clamp(1rem,4vw,3rem) 3rem}
+.hub2-card{width:min(560px,100%);padding:clamp(1.6rem,4vw,2.6rem);border-radius:28px;background:linear-gradient(180deg,rgba(33,26,21,.86),rgba(20,16,13,.86));border:1px solid rgba(243,236,226,.1);box-shadow:0 40px 90px -40px rgba(0,0,0,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.hub2-eb{display:inline-flex;align-items:center;gap:.6rem;font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#D9C3A0}
+.hub2-eb::before{content:"";width:7px;height:7px;border-radius:50%;background:#9FB39A;box-shadow:0 0 12px #9FB39A}
+.hub2-card h1{font-size:clamp(2rem,5vw,2.8rem);letter-spacing:-.04em;line-height:1.05;margin:.8rem 0 .7rem;color:#F3ECE2}
+.hub2-card h1 em{font-family:"Instrument Serif",Georgia,serif;font-weight:400;background:linear-gradient(100deg,#F1E3C8,#D9B68A 40%,#9FB39A);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hub2-card>p{color:rgba(243,236,226,.7);line-height:1.5;margin:0 0 1.4rem}
+.hub2-form{display:grid;gap:.8rem}
+.hub2-form .field{color:#D9C3A0;font-size:.85rem;font-weight:600}
+.hub2-form input{margin-top:.4rem;width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(243,236,226,.16);color:#F3ECE2;border-radius:14px}
+.hub2-form input:focus{border-color:#D9B68A;outline:none;box-shadow:0 0 0 3px rgba(217,182,138,.2)}
+.hub2-form .btn{width:100%;justify-content:center;background:linear-gradient(180deg,#F4E7D1,#D9BB8F);color:#1B120B;border:0}
+.hub2-alt{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:1.3rem;padding-top:1.3rem;border-top:1px solid rgba(243,236,226,.08)}
+.hub2-alt a{display:flex;align-items:center;gap:.7rem;padding:.8rem .9rem;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(243,236,226,.08);color:#F3ECE2;text-decoration:none;transition:background .3s,border-color .3s}
+.hub2-alt a:hover{background:rgba(217,182,138,.1);border-color:rgba(217,182,138,.35)}
+.hub2-alt svg{width:18px;height:18px;flex:none;color:#E8C99C}
+.hub2-alt b{display:block;font-size:.88rem}
+.hub2-alt small{display:block;font-size:.74rem;color:rgba(243,236,226,.55)}
+.hub2-help{color:rgba(243,236,226,.55);font-size:.88rem;text-align:center}
+.hub2-help a{color:#E8C99C}
+@media(max-width:560px){.hub2-alt{grid-template-columns:1fr}.hub2-nav .links .btn-ghost:last-child{display:none}}
+
 .h3{position:relative;height:230vh;background:radial-gradient(120% 90% at 72% 42%,#2A211B 0%,#15110E 45%,#0B0908 100%);color:#F6EFE6}
 .h3-sticky{position:sticky;top:0;height:100vh;height:100svh;min-height:600px;overflow:hidden}
 .h3-sticky::after{content:"";position:absolute;z-index:1;inset:auto 0 0 0;height:22%;background:linear-gradient(transparent,#0D0B0A);pointer-events:none}
@@ -1751,27 +1779,19 @@ function demoTenant(){
     cake:{sizes:[{id:'s',label:'6 parts',servings:6,price:2400}],flavors:[{id:'f',label:'Vanille',price:0}],decos:[]},orders:[],staff:[],videos:[]};
 }
 function viewHub(){
-  const feats=[['store','Borne en libre-service','Catalogue photo, filtres allergènes et commande en quelques touches, sans file d’attente.'],['cake','Gâteaux sur-mesure','Familles, variétés, nombre de parts et décor : le prix se calcule tout seul.'],['calendar','Arrière-boutique','Calendrier des retraits et liste de production du jour, mis à jour en temps réel.'],['video','Vidéos réseaux sociaux','Des scripts de vidéos prêts à tourner à partir de vos produits.']];
-  const lbl=[['Décoration & finitions','Glaçage, fruits frais, inscription, photos d’inspiration.'],['Variété au choix','Fraisier, chocolat, tarte flan ou pommes, à votre prix.'],['Le bon nombre de parts','Tailles fixes ou choix libre, à la part ou au chou.']];
-  return `<div class="lp lp3">
-  <section class="h3"><div class="h3-sticky">
-    <nav class="lp-nav h3-nav"><a class="auth-logo" style="margin:0" href="#/">${LOGO}Prox-e</a><div class="links">${installBtn('btn btn-ghost')}<a class="btn btn-ghost" href="#/activer">Activer un abonnement</a><a class="btn" href="#/admin">Administration</a></div></nav>
-    <div class="h3-stage" data-hero3d><canvas class="h3-fb" data-thumb width="560" height="400" aria-hidden="true"></canvas>
-      ${lbl.map(([h,p],i)=>`<div data-lbl="${i}" class="h3-lbl${i===1?' l':''}" aria-hidden="true"><i></i><div><b>${h}</b><span>${p}</span></div></div>`).join('')}</div>
-    <div class="h3-copy">
-      <span class="h3-kick">Boulangeries · Pâtisseries · Traiteurs</span>
-      <h1>Vos créations méritent<br>une vitrine <em>à leur hauteur.</em></h1>
-      <p>Catalogue numérique, borne de commande et production réunis dans une seule application, aux couleurs de votre maison.</p>
-      <form data-form="openShop" class="h3-form"><label class="field">Adresse de votre borne<input name="slug" required placeholder="boulangerie-du-centre" autocapitalize="off" spellcheck="false"></label><button class="btn btn-lg" type="submit">Ouvrir la borne</button></form>
-      <ul class="h3-stats"><li><b>48 h</b><span>pour planifier le sur-mesure</span></li><li><b>0 €</b><span>d’erreur de calcul en caisse</span></li><li><b>1</b><span>appli pour toute l’équipe</span></li></ul>
-    </div>
-    <p class="h3-story" aria-hidden="true">Vos clients composent leur gâteau, étage par étage.</p>
-    <div class="h3-hint" aria-hidden="true"><span class="mouse"><i></i></span>Faites défiler · glissez pour tourner</div>
-  </div></section>
-  <section class="lp-show"><div class="lp-show-txt" data-reveal><span class="kicker">La borne</span><h2>Aux couleurs de votre maison, en libre-service.</h2><p>Vos photos, vos prix, vos lots. Le client choisit, la commande arrive directement dans l’arrière-boutique.</p></div>
-    <div class="tilt" data-reveal><div class="device"><div class="screen"><div class="scaler">${kioskMenu(demoTenant(),{cat:'all',ex:[],cart:[]},true)}</div></div></div></div></section>
-  <section class="features">${feats.map(([i,h,p],k)=>`<div class="card feat" data-reveal style="--d:${k*90}ms"><span class="fic">${ic(i)}</span><h3>${h}</h3><p>${p}</p></div>`).join('')}</section>
-  <section class="lp-end" data-reveal><h2>Prêt à ouvrir votre borne ?</h2><p>Activez votre abonnement avec le code reçu par e-mail.</p><a class="btn btn-lg" href="#/activer">Activer un abonnement</a></section></div>`;
+  return `<div class="lp lp3 hub2">
+  <div class="hub2-bg" aria-hidden="true"><i></i><i></i></div>
+  <nav class="lp-nav hub2-nav"><a class="auth-logo" style="margin:0" href="accueil.html">${LOGO}Prox-e</a><div class="links">${installBtn('btn btn-ghost')}<a class="btn btn-ghost" href="accueil.html">Découvrir Prox-e</a></div></nav>
+  <main class="hub2-main">
+    <section class="hub2-card" data-reveal>
+      <span class="hub2-eb">Mon espace</span>
+      <h1>Bienvenue sur <em>Prox-e.</em></h1>
+      <p>Saisissez l’adresse de votre borne pour ouvrir votre catalogue ou votre arrière-boutique.</p>
+      <form data-form="openShop" class="hub2-form"><label class="field">Adresse de votre borne<input name="slug" required placeholder="boulangerie-du-centre" autocapitalize="off" spellcheck="false"></label><button class="btn btn-lg" type="submit">Ouvrir la borne</button></form>
+      <div class="hub2-alt"><a href="#/activer">${ic('mail')}<span><b>Activer un abonnement</b><small>Avec le code reçu par e-mail</small></span></a><a href="#/admin">${ic('store')}<span><b>Administration</b><small>Réservé à l’équipe Prox-e</small></span></a></div>
+    </section>
+    <p class="hub2-help">Pas encore client ? <a href="accueil.html">Découvrez Prox-e</a> ou écrivez-nous à <a href="mailto:contact@proxe-commande.fr">contact@proxe-commande.fr</a></p>
+  </main></div>`;
 }
 /* ---------- gâteau sur-mesure en 3D (bannière de la borne) ---------- */
 const K3={vis:false,yaw:.6,yawV:0,raf:0,last:0};
