@@ -2211,23 +2211,20 @@ const TART_SIZES=[4,6,8];
 const TRAD='Gâteaux traditionnels';
 const grpOne=g=>g===TRAD?'Gâteau traditionnel':String(g||'').replace(/s$/,'');
 function famTabs(t){const out=[];famOpen(t).forEach(f=>{const k=f.group?'g:'+f.group:f.id;let x=out.find(z=>z.key===k);if(!x){x={key:k,name:f.group||f.name,group:f.group||null,fams:[]};out.push(x);}x.fams.push(f);});return out;}
-/* règle : tout le sur-mesure se vend par paires (2, 4, 6…), sauf les entremets */
-const ENT_RE=/entremet/i;
-const catName=(t,id)=>((t&&t.categories||[]).find(c=>c.id===id)||{}).name||'';
-function isEntremets(t,f,v){const p=linkedProd(t,v);return [f&&f.name,v&&v.name,p&&p.name,p&&catName(t,p.cat)].some(x=>ENT_RE.test(x||''));}
+/* règle : tout le sur-mesure se vend par paires (2, 4, 6…), entremets compris */
 const pairStep=st=>{st=Math.max(1,st||1);return st%2?st*2:st;};
-const unitStep=(t,f,v)=>{if(!f||f.mode==='formats')return 1;const ent=isEntremets(t,f,v);if(f.mode==='free'&&linkedProd(t,v))return ent?1:2;const st=Math.max(1,f.step||1);return ent?st:pairStep(st);};
+const unitStep=(t,f,v)=>{if(!f||f.mode==='formats')return 1;if(f.mode==='free'&&linkedProd(t,v))return 2;return pairStep(f.step);};
 const varsOf=f=>f.vars.filter(v=>v.active);
 const unitPrice=(f,v)=>v&&v.price!=null?v.price:f.price;
 const fmtOf=(f,n)=>f.mode==='formats'?f.formats.find(x=>x.n===n)||null:null;
 function famPrice(f,v,n){if(f.mode==='formats'){const x=fmtOf(f,n);return x?x.price:0;}return n*unitPrice(f,v);}
 const unitsLabel=(f,n)=>{const x=fmtOf(f,n);return x&&x.label?x.label:n+' '+unitWord(f.unit,n);};
 function famDecos(t,f){const all=(t.cake&&t.cake.decos)||[];if(!f||f.decos==null)return all;return all.filter(o=>f.decos.includes(String(o.id)));}
-function allowedUnits(f,t,v){if(f.mode==='formats')return f.formats.map(x=>x.n);const pair=!isEntremets(t,f,v);
-  if(f.mode==='fixed'){const z=f.sizes.slice();if(!pair)return z;const e=z.filter(n=>n%2===0);return e.length?e:z.map(n=>n+n%2);}
-  const st=pair?pairStep(f.step):Math.max(1,f.step||1),mn=pair?f.min+f.min%2:f.min,a=[];for(let n=mn;n<=f.max&&a.length<500;n+=st)a.push(n);return a.length?a:[mn];}
+function allowedUnits(f,t,v){if(f.mode==='formats')return f.formats.map(x=>x.n);
+  if(f.mode==='fixed'){const z=f.sizes.slice();const e=z.filter(n=>n%2===0);return e.length?e:z.map(n=>n+n%2);}
+  const st=pairStep(f.step),mn=f.min+f.min%2,a=[];for(let n=mn;n<=f.max&&a.length<500;n+=st)a.push(n);return a.length?a:[mn];}
 const linkedProd=(t,v)=>v&&t?(t.products||[]).find(p=>p.cakeOn&&p.cakeVar===v.id)||null:null;
-function unitsFor(t,f,v){const p=f&&f.mode==='free'&&linkedProd(t,v);if(!p)return allowedUnits(f,t,v);const pair=!isEntremets(t,f,v),st=pair?2:1,mn=pair?p.cakeMin+p.cakeMin%2:p.cakeMin,a=[];for(let n=mn;n<=p.cakeMax&&a.length<500;n+=st)a.push(n);return a.length?a:allowedUnits(f,t,v);}
+function unitsFor(t,f,v){const p=f&&f.mode==='free'&&linkedProd(t,v);if(!p)return allowedUnits(f,t,v);const st=2,mn=p.cakeMin+p.cakeMin%2,a=[];for(let n=mn;n<=p.cakeMax&&a.length<500;n+=st)a.push(n);return a.length?a:allowedUnits(f,t,v);}
 function famFrom(f,t){if(f.mode!=='formats'){const vs=varsOf(f);if(vs.length)return Math.min(...vs.map(v=>unitPrice(f,v)*(unitsFor(t,f,v)[0]||1)));}return famFromBase(f);}
 function famFromBase(f){if(f.mode==='formats')return f.formats.length?Math.min(...f.formats.map(x=>x.price)):0;const vs=varsOf(f);const up=vs.length?Math.min(...vs.map(v=>unitPrice(f,v))):f.price;return up*(allowedUnits(f,null,null)[0]||1);}
 function bundleTotal(unit,n,bq,bp){return bq&&bp?Math.floor(n/bq)*bp+(n%bq)*unit:unit*n;}
@@ -2738,18 +2735,17 @@ function ovProdEdit(t){
 function cakeFamOptions(t){const fams=(t.fam||[]).filter(f=>f.mode==='free'&&!f.group),o=fams.map(f=>({value:f.id,label:f.name}));
   if(!(t.fam||[]).some(f=>/g[aâ]teau.*commande/i.test(f.name)))o.push({value:'new:Gâteaux sur commande',label:'Gâteaux sur commande (nouvelle partie)'});
   return o;}
-function prodIsEnt(d){return ENT_RE.test(d.name||'')||ENT_RE.test(catName(curT(),d.cat));}
-function cakeExample(d){const ent=prodIsEnt(d);const pc=Math.round(parseFloat(String(d.cakePriceStr||'').replace(',','.'))*100),mn=parseInt(d.cakeMinStr,10),mx=parseInt(d.cakeMaxStr,10);
+function cakeExample(d){const pc=Math.round(parseFloat(String(d.cakePriceStr||'').replace(',','.'))*100),mn=parseInt(d.cakeMinStr,10),mx=parseInt(d.cakeMaxStr,10);
   if(!(pc>0)||!(mn>=1))return 'Le prix se calcule tout seul : nombre de parts × prix à la part.';
-  const odd=!ent&&(mn%2||(mx>=1&&mx%2)),sp=ent?1:2;
-  return (odd?'⚠ Les parts vont par paires : le minimum et le maximum doivent être pairs. ':'')+`Exemple : ${mn} parts = ${eur(mn*pc)}`+(mx>mn?` · ${mx} parts = ${eur(mx*pc)}`:'')+(mx>mn+sp?` (choix : ${Array.from({length:Math.min(6,Math.floor((mx-mn)/sp)+1)},(_,i)=>mn+sp*i).join(', ')}${mn+5*sp<mx?'…':''})`:'')+(ent?' · Entremets : nombre de parts libre, pas forcément par paires.':'');}
+  const odd=mn%2||(mx>=1&&mx%2),sp=2;
+  return (odd?'⚠ Les parts vont par paires : le minimum et le maximum doivent être pairs. ':'')+`Exemple : ${mn} parts = ${eur(mn*pc)}`+(mx>mn?` · ${mx} parts = ${eur(mx*pc)}`:'')+(mx>mn+sp?` (choix : ${Array.from({length:Math.min(6,Math.floor((mx-mn)/sp)+1)},(_,i)=>mn+sp*i).join(', ')}${mn+5*sp<mx?'…':''})`:'');}
 function prodCakeSect(t,d){const opts=cakeFamOptions(t);if(d.cakeOn&&!opts.some(o=>o.value===d.cakeFamSel))d.cakeFamSel=(opts[0]||{}).value||'';
   return `<div class="sect"><h3>Gâteau sur commande</h3><p class="muted small">Proposez cette pâtisserie en grand format sur la borne, dans le sur-mesure. Le client choisit le nombre de parts entre votre minimum et votre maximum, et le prix se calcule tout seul. Elle s’ajoute aussi à la liste des parfums que vous pouvez proposer pour le layer cake ou le number cake.</p>
   <label class="field" style="display:flex;align-items:center;gap:.7rem;font-size:.92rem"><span class="tog"><input type="checkbox" data-bind="B:editProd.cakeOn" data-change="rerender" ${d.cakeOn?'checked':''}><span></span></span>Proposer en gâteau sur commande</label>
   ${d.cakeOn?`<div class="grid2" style="margin-top:.8rem"><label class="field">Partie du sur-mesure<select data-bind="B:editProd.cakeFamSel">${opts.map(o=>`<option value="${esc(o.value)}" ${o.value===d.cakeFamSel?'selected':''}>${esc(o.label)}</option>`).join('')}</select><span class="hint">L’onglet de la borne où ce gâteau apparaît.</span></label>
   <label class="field">Prix à la part (€)<input data-bind="B:editProd.cakePriceStr" value="${esc(d.cakePriceStr)}" inputmode="decimal" placeholder="3,50"></label></div>
-  <div class="grid2" style="margin-top:.8rem"><label class="field">Nombre de parts minimum<input data-bind="B:editProd.cakeMinStr" value="${esc(d.cakeMinStr)}" inputmode="numeric" placeholder="6"><span class="hint">${prodIsEnt(d)?'Entremets : pair ou impair, par exemple 5.':'Nombre pair, par exemple 4 ou 6.'}</span></label>
-  <label class="field">Nombre de parts maximum<input data-bind="B:editProd.cakeMaxStr" value="${esc(d.cakeMaxStr)}" inputmode="numeric" placeholder="12"><span class="hint">${prodIsEnt(d)?'Entremets : le client choisit part par part.':'Nombre pair. Le client choisit par paires : 4, 6, 8…'}</span></label></div>
+  <div class="grid2" style="margin-top:.8rem"><label class="field">Nombre de parts minimum<input data-bind="B:editProd.cakeMinStr" value="${esc(d.cakeMinStr)}" inputmode="numeric" placeholder="6"><span class="hint">Nombre pair, par exemple 4 ou 6.</span></label>
+  <label class="field">Nombre de parts maximum<input data-bind="B:editProd.cakeMaxStr" value="${esc(d.cakeMaxStr)}" inputmode="numeric" placeholder="12"><span class="hint">Nombre pair. Le client choisit par paires : 4, 6, 8…</span></label></div>
   <p class="note small" id="cakeEx" style="margin-top:.8rem">${cakeExample(d)}</p>`:''}</div>`;}
 function flvCandidates(t){const cats=t.categories.filter(c=>/p[aâ]tiss|g[aâ]teau|tarte|entremet/i.test(c.name)).map(c=>c.id),seen=new Set(),out=[];
   t.products.filter(p=>p.cakeOn||cats.includes(p.cat)).forEach(p=>{const n=p.name.slice(0,30),k=n.toLowerCase();if(!seen.has(k)){seen.add(k);out.push(n);}});return out.slice(0,40);}
@@ -2824,7 +2820,7 @@ function famsCard(t){const fams=(t.fam||[]).filter(f=>!f.group),ms=t.models||[];
     <div class="fam-f"><button class="btn-link" data-act="addVar" data-id="${f.id}">${ic('plus')} Ajouter une variété</button><button class="btn-link" data-act="newModel" data-f="${f.id}">${ic('image')} Ajouter un modèle en photo</button></div>${mGrid(fm)}</div>`;};
   const orphans=ms.filter(m=>!m.famId||!(t.fam||[]).some(f=>f.id===m.famId));
   return `<div class="card"><div class="card-h"><div><h2>Familles de gâteaux</h2><p class="muted small">Chaque famille devient un onglet sur la borne, avec son prix et sa façon de choisir les parts. Le prix d’une variété laissé vide reprend celui de la famille.</p></div><div class="head-act"><button class="btn btn-sec" data-act="famPreset" data-confirm="Confirmer : créer la structure simplifiée">${ic('cake')}Structure simplifiée</button><button class="btn" data-act="newFam">${ic('plus')}Nouvelle famille</button></div></div><div class="card-b">
-  <p class="note small">« Structure simplifiée » crée en un clic : Layer cake (un parfum ou un parfum par étage), Croquembouche, Number cake (chiffres demandés au client) et Pâtisseries à la part, tout à la part et par paires (sauf les entremets, au choix part par part), topper en option. Les tartes se gèrent à part, plus bas, avec un prix par taille. Les familles créées restent masquées le temps de vérifier les prix ; vos autres familles sont masquées, jamais supprimées.</p>
+  <p class="note small">« Structure simplifiée » crée en un clic : Layer cake (un parfum ou un parfum par étage), Croquembouche, Number cake (chiffres demandés au client) et Pâtisseries à la part, tout à la part et par paires (entremets compris), topper en option. Les tartes se gèrent à part, plus bas, avec un prix par taille. Les familles créées restent masquées le temps de vérifier les prix ; vos autres familles sont masquées, jamais supprimées.</p>
   ${fams.length?fams.map(block).join(''):'<div class="empty">Créez votre première famille, par exemple « Gâteaux traditionnels » à 3,70 € la part.</div>'}
   ${orphans.length?`<div class="fam"><div class="fam-h"><div><h3>Modèles sans famille</h3><p class="muted small">Ouvrez-les pour leur attribuer une famille, sinon ils restent invisibles sur la borne.</p></div></div>${mGrid(orphans)}</div>`:''}</div></div>`;}
 function tradCard(t){const ts=(t.fam||[]).filter(f=>f.group===TRAD);const fmt=c=>(c/100).toFixed(2).replace('.',',');
@@ -3611,7 +3607,7 @@ const FORMS={
     let cake=null;
     if(d.cakeOn){const cp=Math.round(parseFloat(String(d.cakePriceStr||'').replace(',','.'))*100);if(!(cp>0))return toast('Indiquez le prix à la part du gâteau, par exemple 3,50.');
       const mn=parseInt(d.cakeMinStr,10),mx=parseInt(d.cakeMaxStr,10);if(!(mn>=2&&mx>=mn&&mx<=500))return toast('Vérifiez le nombre de parts : un minimum d’au moins 2 et un maximum supérieur ou égal au minimum.');
-      if(!prodIsEnt(d)&&(mn%2||mx%2))return toast('Les parts vont par paires : saisissez un minimum et un maximum pairs (par exemple 4 et 8).');
+      if(mn%2||mx%2)return toast('Les parts vont par paires : saisissez un minimum et un maximum pairs (par exemple 4 et 8).');
       const fam=d.cakeFamSel||(cakeFamOptions(t)[0]||{}).value;if(!fam)return toast('Choisissez la partie du sur-mesure.');cake={price:cp,min:mn,max:mx,fam};}
     try{
       let image=d.image?d.image.url:null;
