@@ -1304,6 +1304,32 @@ async function bgAllRun(){
   }catch(e){toast(errMsg(e));try{await reloadProducts();await reloadModels();}catch(_){}}
   finally{BGALL=null;render();}
 }
+/* alléger les photos déjà enregistrées (une seule fois) : moins lourdes + cache d'un an, anciennes versions supprimées */
+let OPTALL=null;
+const mediaPath=u=>{const k='/object/public/media/';const i=String(u||'').indexOf(k);return i<0?null:decodeURIComponent(String(u).slice(i+k.length).split('?')[0]);};
+async function optAllRun(){
+  const t=curT();if(!t||OPTALL||BGALL)return;
+  const prods=t.products.filter(p=>p.image||(p.frames&&p.frames.length)),mods=(t.models||[]).filter(m=>m.image);
+  const total=prods.length+mods.length;if(!total)return toast('Aucune photo à alléger.');
+  OPTALL={done:0,total};render();let changed=0,saved=0;const old=[];
+  const one=async(u,folder)=>{if(!mediaPath(u))return u;const raw=await urlToBlob(u);const b=await shrinkBlob(raw,MEDIA_MAX[folder]||1400,.82);
+    if(b===raw)return u;saved+=raw.size-b.size;old.push(mediaPath(u));return await uploadMedia(b,folder,true);};
+  try{
+    for(const p of prods){toast(`Allègement : ${p.name} (${OPTALL.done+1} / ${total})…`);
+      const img=p.image?await one(p.image,'products'):null;const fr=[];
+      for(let k=0;k<(p.frames||[]).length;k+=6)fr.push(...await Promise.all(p.frames.slice(k,k+6).map(u=>one(u,'spin'))));
+      const upd={};if(img&&img!==p.image)upd.image_url=img;if(fr.some((u,i)=>u!==p.frames[i]))upd.spin_frames=fr;
+      if(Object.keys(upd).length){await q(sb.from('products').update(upd).eq('id',p.id));changed++;}
+      OPTALL.done++;render();}
+    for(const m of mods){toast(`Allègement : modèle ${m.title} (${OPTALL.done+1} / ${total})…`);
+      const u=await one(m.image,'models');if(u!==m.image){await q(sb.from('cake_models').update({image_url:u}).eq('id',m.id));changed++;}OPTALL.done++;render();}
+    await reloadProducts();await reloadModels();
+    /* on ne supprime que les anciens fichiers qui ne servent plus nulle part */
+    try{const used=JSON.stringify(curT()||{});const del=old.filter(p=>!used.includes(p));for(let i=0;i<del.length;i+=100)await sb.storage.from('media').remove(del.slice(i,i+100));}catch(_){}
+    toast(changed?`${changed} fiche${changed>1?'s':''} allégée${changed>1?'s':''} : ${Math.round(saved/1048576)} Mo en moins par affichage complet du catalogue.`:'Les photos sont déjà légères : rien à faire.');
+  }catch(e){toast(errMsg(e));try{await reloadProducts();await reloadModels();}catch(_){}}
+  finally{OPTALL=null;render();}
+}
 /* netteté : on garde l'image la moins floue autour de chaque angle, puis légère accentuation */
 const SHARP_C=document.createElement('canvas');
 function sharpScore(c){const W=200,H=Math.max(1,Math.round(W*c.height/c.width));SHARP_C.width=W;SHARP_C.height=H;const x=SHARP_C.getContext('2d',{willReadFrequently:true});x.drawImage(c,0,0,W,H);
@@ -1595,7 +1621,14 @@ function subscribeOrders(){
   }).subscribe();}catch(e){CH=null;}
 }
 function unsubscribe(){if(CH){try{sb.removeChannel(CH);}catch(e){}CH=null;}}
-async function uploadMedia(blob,folder){const path=`${D.t.id}/${folder}/${newId()}.jpg`;const {error}=await sb.storage.from('media').upload(path,blob,{contentType:'image/jpeg',upsert:false});if(error)throw error;return sb.storage.from('media').getPublicUrl(path).data.publicUrl;}
+/* photos allégées avant envoi + cache navigateur d'un an (chaque fichier a un nom unique) : limite fortement la bande passante Supabase */
+const MEDIA_MAX={spin:1000,cover:1600,poster:1600,cake:1600},MEDIA_KEEP=200*1024;
+function shrinkBlob(blob,max,q){return new Promise(res=>{const u=URL.createObjectURL(blob),img=new Image();
+  img.onload=()=>{URL.revokeObjectURL(u);const r=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));if(r>=1&&blob.size<=MEDIA_KEEP)return res(blob);
+    const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*r));c.height=Math.max(1,Math.round(img.naturalHeight*r));const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>res(b&&b.size<blob.size?b:blob),'image/jpeg',q);};
+  img.onerror=()=>{URL.revokeObjectURL(u);res(blob);};img.src=u;});}
+async function uploadMedia(blob,folder,ready){if(!ready)blob=await shrinkBlob(blob,MEDIA_MAX[folder]||1400,.82);const path=`${D.t.id}/${folder}/${newId()}.jpg`;const {error}=await sb.storage.from('media').upload(path,blob,{contentType:'image/jpeg',upsert:false,cacheControl:'31536000'});if(error)throw error;return sb.storage.from('media').getPublicUrl(path).data.publicUrl;}
 
 function ensureShop(slug){
   if(D&&D.slug===slug)return true;
@@ -2520,7 +2553,7 @@ function viewBack(t){
   const today=cap(new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}));
   const pages={
     orders:()=>({title:'Commandes',subtitle:today,actions:`<button class="btn btn-sec" data-act="reloadOrders">${ic('restart')}Actualiser</button>`,body:tabOrders(t)}),
-    products:()=>({title:'Catalogue',subtitle:`${t.products.length} produits, ${t.products.filter(p=>p.active).length} en vente sur la borne`,actions:`<button class="btn btn-sec" data-act="bgAll" data-confirm="Lancer : tout passer sur fond noir" ${BGALL?'disabled':''}>${ic('image')}${BGALL?`Fond noir ${BGALL.done} / ${BGALL.total}…`:'Tout le catalogue sur fond noir'}</button><button class="btn" data-act="newProd">${ic('plus')}Ajouter un produit</button>`,body:tabProducts(t)}),
+    products:()=>({title:'Catalogue',subtitle:`${t.products.length} produits, ${t.products.filter(p=>p.active).length} en vente sur la borne`,actions:`<button class="btn btn-sec" data-act="optAll" data-confirm="Lancer : alléger toutes les photos" ${OPTALL||BGALL?'disabled':''}>${ic('image')}${OPTALL?`Allègement ${OPTALL.done} / ${OPTALL.total}…`:'Alléger les photos'}</button><button class="btn btn-sec" data-act="bgAll" data-confirm="Lancer : tout passer sur fond noir" ${BGALL||OPTALL?'disabled':''}>${ic('image')}${BGALL?`Fond noir ${BGALL.done} / ${BGALL.total}…`:'Tout le catalogue sur fond noir'}</button><button class="btn" data-act="newProd">${ic('plus')}Ajouter un produit</button>`,body:tabProducts(t)}),
     cake:()=>({title:'Gâteaux sur-mesure',subtitle:'Les options proposées au client sur la borne',body:tabCake(t)}),
     brand:()=>({title:'Vitrine et borne',subtitle:'Ce que vos clients voient en arrivant',actions:`<button class="btn btn-sec" data-act="exitBack">${ic('eye')}Voir la borne</button>`,body:tabBrand(t)}),
     sales:()=>({title:'Vente en ligne',subtitle:'Click & collect, livraison, créneaux et paiement',body:tabSales(t)}),
@@ -3400,6 +3433,7 @@ const ACT={
   modelBgExisting(){modelLoadExisting();},
   modelBgOrig(){const d=B.editModel;if(d&&d.image&&d.image.raw){d.image={blob:d.image.raw,url:URL.createObjectURL(d.image.raw),raw:d.image.raw,ok:true};render();}},
   bgAll(){bgAllRun();},
+  optAll(){optAllRun();},
   prodFramesClear(){B.editProd.frames=[];render();},
   prodFramesFlip(){const f=B.editProd.frames;if(f.length>1)B.editProd.frames=[f[0]].concat(f.slice(1).reverse());render();},
   prodCat(el){B.prodCat=el.dataset.c;render();},
@@ -3689,8 +3723,8 @@ async function handleFile(el){
     else if(kind==='prodImage'){const d=B.editProd;toast('Préparation de la photo…');const raw=await resizeToBlob(files[0],2000,0.92);const m=await finishMedia(raw,getBgMode(),0.9);if(B.editProd!==d)return;d.image=m;toast(m.ok?'Photo prête : vérifiez l’aperçu, puis enregistrez.':BG_WARN);render();}
     else if(kind==='prodVideo'){if(B.v360)return;const f=files[0];
       if(f.size>300*1024*1024)return toast('Vidéo trop lourde : filmez 5 à 15 secondes suffisent.');
-      const d=B.editProd,mode=getBgMode();B.v360={n:48,done:0,label:'Sélection des images les plus nettes'};render();
-      try{const raws=await videoToFrames(f,48,1440,v360Step);raws.forEach(r=>URL.revokeObjectURL(r.url));
+      const d=B.editProd,mode=getBgMode();B.v360={n:36,done:0,label:'Sélection des images les plus nettes'};render();
+      try{const raws=await videoToFrames(f,36,1440,v360Step);raws.forEach(r=>URL.revokeObjectURL(r.url));
         let out=raws.map(r=>({blob:r.blob,url:URL.createObjectURL(r.blob),raw:r.blob,ok:true})),bad=0;
         if(mode!=='off'){B.v360={n:raws.length,done:0,label:'Mise sur fond noir'};render();out=[];
           for(let i=0;i<raws.length;i++){const m=await finishMedia(raws[i].blob,mode,.9);if(!m.ok)bad++;out.push(m);v360Step(i+1);}}
