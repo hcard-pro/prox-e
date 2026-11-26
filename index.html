@@ -1610,7 +1610,15 @@ async function reloadModels(d=D){try{d.t.models=(await q(sb.from('cake_models').
 async function reloadOrders(){const since=addDays(new Date(),-45).toISOString();D.t.orders=(await q(sb.from('orders').select('*, order_items(*), order_cakes(*)').eq('tenant_id',D.t.id).gte('pickup_at',since).order('pickup_at').limit(1000))).map(mapOrder);}
 async function reloadStaff(){D.t.staff=await q(sb.from('staff').select('id,name,role,created_at').eq('tenant_id',D.t.id).order('created_at'));}
 async function reloadVideos(){D.t.videos=(await q(sb.from('videos').select('*').eq('tenant_id',D.t.id).order('created_at',{ascending:false}).limit(50))).map(mapVideo);}
-async function loadPrivate(){await Promise.all([reloadOrders(),reloadStaff(),reloadVideos(),reloadProducts(),reloadCats(),reloadCake(),reloadBranding(),reloadModels(),reloadPay()]);D.priv=true;D.privError=null;subscribeOrders();}
+/* gâteaux traditionnels : topper en supplément sur chacun (créé à 5 € s'il n'existe pas) */
+async function syncTradTopper(d=D){try{const t=d.t;const tr=(t.fam||[]).filter(f=>f.group===TRAD);if(!tr.length)return;
+  let top=(t.cake.decos||[]).find(isTopper);
+  if(!top){const pos=(t.cake.decos||[]).reduce((m,o)=>Math.max(m,o.position||0),0)+1;
+    await q(sb.from('cake_options').insert({tenant_id:t.id,kind:'deco',label:'Topper',servings:null,price_cents:500,position:pos}));await reloadCake(d);top=(d.t.cake.decos||[]).find(isTopper);if(!top)return;}
+  const id=String(top.id);let ch=false;
+  for(const f of (d.t.fam||[]).filter(f=>f.group===TRAD&&f.decos!=null&&!f.decos.includes(id))){await q(sb.from('cake_families').update({deco_ids:f.decos.concat(id)}).eq('id',f.id));ch=true;}
+  if(ch)await reloadCake(d);}catch(e){console.warn('topper gâteaux traditionnels',e);}}
+async function loadPrivate(){await Promise.all([reloadOrders(),reloadStaff(),reloadVideos(),reloadProducts(),reloadCats(),reloadCake(),reloadBranding(),reloadModels(),reloadPay()]);await syncTradTopper();D.priv=true;D.privError=null;subscribeOrders();}
 
 let CH=null,rtTimer=null;
 function subscribeOrders(){
@@ -2252,7 +2260,10 @@ const unitPrice=(f,v)=>v&&v.price!=null?v.price:f.price;
 const fmtOf=(f,n)=>f.mode==='formats'?f.formats.find(x=>x.n===n)||null:null;
 function famPrice(f,v,n){if(f.mode==='formats'){const x=fmtOf(f,n);return x?x.price:0;}return n*unitPrice(f,v);}
 const unitsLabel=(f,n)=>{const x=fmtOf(f,n);return x&&x.label?x.label:n+' '+unitWord(f.unit,n);};
-function famDecos(t,f){const all=(t.cake&&t.cake.decos)||[];if(!f||f.decos==null)return all;return all.filter(o=>f.decos.includes(String(o.id)));}
+function famDecos(t,f){const all=(t.cake&&t.cake.decos)||[];if(!f||f.decos==null)return all;
+  /* gâteaux traditionnels : le topper est toujours proposé en supplément */
+  const trad=f.group===TRAD;return all.filter(o=>f.decos.includes(String(o.id))||(trad&&isTopper(o)));}
+const isTopper=o=>/topper/i.test((o&&o.label)||'');
 function allowedUnits(f,t,v){if(f.mode==='formats')return f.formats.map(x=>x.n);
   if(f.mode==='fixed'){const z=f.sizes.slice();const e=z.filter(n=>n%2===0);return e.length?e:z.map(n=>n+n%2);}
   const st=pairStep(f.step),mn=f.min+f.min%2,a=[];for(let n=mn;n<=f.max&&a.length<500;n+=st)a.push(n);return a.length?a:[mn];}
@@ -2864,7 +2875,7 @@ function tradCard(t){const ts=(t.fam||[]).filter(f=>f.group===TRAD);const fmt=c=
     <td><input type="number" min="1" inputmode="numeric" value="${f.max}" data-change="tradMax" data-id="${f.id}" aria-label="Parts maximum"></td>
     <td><label class="tog"><input type="checkbox" data-change="famActive" data-id="${f.id}" ${f.active?'checked':''} aria-label="Visible"><span></span></label></td>
     <td class="r"><button class="icon-btn" data-act="delTrad" data-id="${f.id}" data-confirm="OK ?" aria-label="Supprimer ${esc(f.name)}">${ic('trash')}</button></td></tr>`;
-  return `<div class="card"><div class="card-h"><div><h2>Gâteaux traditionnels</h2><p class="muted small">Fraisier, forêt noire, opéra… Pour chaque gâteau : son prix à la part, et le nombre de parts minimum et maximum. Sur la borne, le client choisit le nombre de parts entre les deux et le prix se calcule tout seul. Les gâteaux traditionnels ont leur propre onglet.</p></div><button class="btn" data-act="addTrad">${ic('plus')}Ajouter un gâteau</button></div>
+  return `<div class="card"><div class="card-h"><div><h2>Gâteaux traditionnels</h2><p class="muted small">Fraisier, forêt noire, opéra… Pour chaque gâteau : son prix à la part, et le nombre de parts minimum et maximum. Sur la borne, le client choisit le nombre de parts entre les deux et le prix se calcule tout seul. Les gâteaux traditionnels ont leur propre onglet. Le topper est proposé en supplément sur chacun (prix réglable dans « Décorations et options »).</p></div><button class="btn" data-act="addTrad">${ic('plus')}Ajouter un gâteau</button></div>
   <div class="tablewrap"><table class="tbl"><thead><tr><th style="width:64px">Photo</th><th>Gâteau</th><th style="width:120px">Prix / part (€)</th><th style="width:100px">Parts min.</th><th style="width:100px">Parts max.</th><th style="width:70px">Visible</th><th style="width:50px"></th></tr></thead><tbody>
   ${ts.length?ts.map(row).join(''):'<tr><td colspan="7" class="empty">Aucun gâteau traditionnel pour l’instant.</td></tr>'}</tbody></table></div></div>`;}
 function tartsCard(t){const ts=(t.fam||[]).filter(f=>f.group==='Tartes');const fmt=c=>(c/100).toFixed(2).replace('.',',');
@@ -3478,7 +3489,7 @@ const ACT={
   addTart(){const t=curT(),pos=(t.fam||[]).reduce((m,f)=>Math.max(m,f.position||0),0)+1;
     safe(async()=>{await q(sb.from('cake_families').insert({tenant_id:t.id,name:'Nouvelle tarte',group_name:'Tartes',description:null,unit_label:'personne',price_cents:0,parts_mode:'formats',min_units:4,max_units:8,step_units:1,sizes:[],formats:[],active:true,position:pos}));await reloadCake();},'Tarte ajoutée : donnez-lui un nom et ses prix.');},
   addTrad(){const t=curT(),pos=(t.fam||[]).reduce((m,f)=>Math.max(m,f.position||0),0)+1;
-    safe(async()=>{await q(sb.from('cake_families').insert({tenant_id:t.id,name:'Nouveau gâteau',group_name:TRAD,description:null,unit_label:'part',price_cents:0,parts_mode:'free',min_units:6,max_units:20,step_units:1,sizes:[],formats:[],active:false,position:pos}));await reloadCake();},'Gâteau ajouté : donnez-lui un nom, un prix à la part et ses parts min./max., puis rendez-le visible.');},
+    safe(async()=>{await q(sb.from('cake_families').insert({tenant_id:t.id,name:'Nouveau gâteau',group_name:TRAD,description:null,unit_label:'part',price_cents:0,parts_mode:'free',min_units:6,max_units:20,step_units:1,sizes:[],formats:[],active:false,position:pos}));await reloadCake();await syncTradTopper();},'Gâteau ajouté : donnez-lui un nom, un prix à la part et ses parts min./max., puis rendez-le visible.');},
   delTrad(el){safe(async()=>{await q(sb.from('cake_families').delete().eq('id',el.dataset.id));await reloadCake();},'Gâteau supprimé.');},
   delTart(el){safe(async()=>{await q(sb.from('cake_families').delete().eq('id',el.dataset.id));await reloadCake();},'Tarte supprimée.');},
   addVar(el){const t=curT(),f=(t.fam||[]).find(z=>z.id===el.dataset.id);if(!f)return;safe(async()=>{await q(sb.from('cake_varieties').insert({tenant_id:t.id,family_id:f.id,name:'Nouvelle variété',position:f.vars.length+1}));await reloadCake();});},
